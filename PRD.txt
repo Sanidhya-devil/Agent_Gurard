@@ -1,0 +1,497 @@
+1. Product Overview
+1.1 Product Name
+
+AgentGuard
+
+Tagline
+
+Govern every agent. Control every action. Protect every transaction.
+
+1.2 Product Vision
+
+AgentGuard is a real-time governance and safety control plane for autonomous financial AI agents.
+
+It sits between autonomous agents and sensitive financial systems and ensures that every financial action is:
+
+authenticated
+authorized
+budget-controlled
+risk-evaluated
+auditable
+revocable
+
+The system provides operators with centralized control over a fleet of autonomous agents.
+
+2. Problem Statement
+
+Autonomous AI agents can increasingly perform financial operations such as:
+
+payments
+refunds
+transfers
+loan processing
+investment decisions
+fraud investigation
+customer support actions
+
+However, giving autonomous agents direct access to financial systems creates major risks.
+
+Major problems
+
+1. Excessive permissions
+
+An agent may have access to financial operations it does not actually need.
+
+2. Uncontrolled spending
+
+A compromised or malfunctioning agent could perform multiple transactions.
+
+3. Difficult revocation
+
+Removing an agent's access after deployment may not immediately stop its actions.
+
+4. Lack of centralized control
+
+Operators may not have a single dashboard to monitor autonomous agents.
+
+5. Poor auditability
+
+Organizations need to know:
+
+Who performed the action?
+What did they do?
+Why was it allowed?
+What policy allowed it?
+
+6. AI-specific risks
+
+Traditional authorization alone cannot evaluate contextual risk associated with an AI-generated transaction.
+
+3. Proposed Solution
+
+AgentGuard introduces a governance layer between AI agents and financial services.
+
+Core architecture
+                ┌──────────────────────┐
+                │   Autonomous Agents  │
+                │                      │
+                │ Payment │ Loan │ AI  │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │      AgentGuard      │
+                │ Governance Layer     │
+                ├──────────────────────┤
+                │ Identity             │
+                │ Permissions          │
+                │ Budget Control       │
+                │ AI Risk Engine       │
+                │ Revocation           │
+                │ Kill Switch          │
+                │ Audit Logging        │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │ Financial Services   │
+                │ Payment / Banking    │
+                │ APIs / Simulator     │
+                └──────────────────────┘
+Fundamental rule
+
+No autonomous agent can directly access a sensitive financial API.
+
+Every action must pass through AgentGuard.
+
+4. Goals
+Primary Goals
+G1 — Least-Privilege Access
+
+Allow administrators to define exactly what each agent can do.
+
+Example:
+
+PaymentAgent
+
+✓ create_payment
+✓ view_balance
+
+✗ modify_user
+✗ create_loan
+✗ withdraw_without_limit
+G2 — Dynamic Financial Controls
+
+Each agent receives a configurable spending limit.
+
+Example:
+
+Daily Limit = ₹50,000
+
+Used = ₹42,000
+
+Remaining = ₹8,000
+
+The system blocks transactions exceeding the remaining budget.
+
+G3 — AI-Based Risk Assessment
+
+Evaluate transactions using contextual information.
+
+Example:
+
+Transaction:
+₹25,000
+
+Agent:
+PaymentAgent
+
+Risk:
+HIGH
+
+Reason:
+Unusual transaction frequency
+
+Decision:
+
+HUMAN APPROVAL REQUIRED
+G4 — Real-Time Revocation
+
+Administrators can immediately revoke an agent.
+
+Agent Status
+
+ACTIVE → REVOKED
+
+Future requests are rejected.
+
+G5 — Emergency Shutdown
+
+A global emergency switch stops the entire agent fleet.
+
+NORMAL
+   ↓
+EMERGENCY STOP
+   ↓
+ALL AGENTS BLOCKED
+G6 — Complete Auditability
+
+Every action must produce an audit event.
+
+5. Non-Goals
+
+For the hackathon MVP, AgentGuard will not attempt to:
+
+become an actual banking system
+process real money
+replace financial institutions
+provide regulatory certification
+train a foundation model
+implement every possible financial API
+support every possible AI agent framework
+
+The financial environment can be simulated.
+
+6. Target Users
+6.1 Security Administrator
+
+Responsibilities:
+
+manage agents
+assign permissions
+revoke agents
+trigger emergency shutdown
+review security events
+6.2 Financial Operations Manager
+
+Responsibilities:
+
+monitor transactions
+configure budgets
+review high-risk actions
+approve/reject transactions
+6.3 Security Auditor
+
+Responsibilities:
+
+inspect logs
+investigate suspicious actions
+track agent activity
+verify policy enforcement
+6.4 Autonomous Agent
+
+The agent is not a human user.
+
+It acts as a controlled system identity.
+
+7. Key Features
+Feature 1 — Agent Management
+
+Administrator can:
+
+register agent
+view agent
+activate/deactivate agent
+revoke agent
+assign permissions
+
+Agent information:
+
+Agent ID
+Agent Name
+Agent Type
+Status
+Permissions
+Daily Budget
+Risk Level
+Created At
+Last Activity
+8. Permission Management
+
+AgentGuard uses granular permissions.
+
+Example:
+
+PaymentAgent
+
+payment:create
+payment:view
+payment:refund
+
+Another agent:
+
+LoanAgent
+
+loan:create
+loan:view
+loan:update
+
+Authorization decision:
+
+Agent + Action + Resource
+             ↓
+       Policy Evaluation
+             ↓
+       ALLOW / DENY
+9. Dynamic Budget Control
+
+Every agent can have:
+
+Daily Limit
+Per Transaction Limit
+Remaining Budget
+Current Usage
+
+Example:
+
+Daily Limit: ₹50,000
+Transaction Limit: ₹10,000
+
+Request: ₹12,000
+
+Result:
+BLOCKED
+Reason:
+Per-transaction limit exceeded
+10. AI Risk Engine
+
+This is one of the most important parts of AgentGuard.
+
+The AI engine evaluates transaction context.
+
+Input
+{
+  "agent_id": "agent_001",
+  "amount": 25000,
+  "transaction_type": "payment",
+  "frequency": 8,
+  "recipient": "new_recipient",
+  "time": "02:30"
+}
+Risk engine output
+{
+  "risk_score": 87,
+  "risk_level": "HIGH",
+  "reason": "Unusual transaction pattern",
+  "recommended_action": "HUMAN_APPROVAL"
+}
+Decision
+Risk < 40
+    ↓
+ALLOW
+
+40–75
+    ↓
+MONITOR / CONDITIONAL
+
+>75
+    ↓
+HUMAN APPROVAL / BLOCK
+
+The exact thresholds should be configurable rather than hard-coded into the UI.
+
+11. Real-Time Revocation
+
+Admin selects:
+
+Agent: PaymentAgent
+Action: REVOKE
+
+AgentGuard immediately changes:
+
+ACTIVE → REVOKED
+
+Any subsequent request:
+
+403 AGENT_REVOKED
+12. Emergency Kill Switch
+
+Global emergency control:
+
+EMERGENCY STOP
+
+When activated:
+
+GlobalState = STOPPED
+
+All sensitive agent actions are denied.
+
+Agent A → BLOCKED
+Agent B → BLOCKED
+Agent C → BLOCKED
+Agent D → BLOCKED
+
+This should be fail-closed.
+
+13. Audit Logging
+
+Every request generates an audit event.
+
+Example:
+
+{
+  "event_id": "evt_123",
+  "agent_id": "agent_001",
+  "action": "payment:create",
+  "amount": 5000,
+  "risk_score": 23,
+  "decision": "ALLOW",
+  "reason": "Permission and budget valid",
+  "timestamp": "2026-10-04T21:00:00Z"
+}
+
+Audit records should be immutable from the normal dashboard workflow.
+
+14. Operator Dashboard
+
+Dashboard should show:
+
+Overview
+Active Agents       128
+Allowed Actions     12,821
+Blocked Actions       421
+High Risk              7
+
+Important: These numbers are demo/mock values unless generated from your actual system.
+
+Dashboard sections
+Agent status
+Transaction activity
+Risk alerts
+Budget usage
+Blocked requests
+Audit logs
+Emergency control
+15. Functional Requirements
+ID	Requirement	Priority
+FR-01	Register agent	P0
+FR-02	Authenticate agent	P0
+FR-03	Configure permissions	P0
+FR-04	Authorize requests	P0
+FR-05	Configure spending limits	P0
+FR-06	Check budget	P0
+FR-07	AI risk evaluation	P0
+FR-08	Revoke agent	P0
+FR-09	Global emergency stop	P0
+FR-10	Audit all actions	P0
+FR-11	Operator dashboard	P0
+FR-12	Human approval workflow	P1
+FR-13	Prometheus metrics	P1
+FR-14	Advanced policy engine	P2
+16. User Stories
+US-01
+
+As an administrator, I want to register an AI agent so that I can control its activities.
+
+US-02
+
+As an administrator, I want to assign specific permissions so that agents follow least-privilege access.
+
+US-03
+
+As an operator, I want to configure spending limits so that an agent cannot exceed its financial authority.
+
+US-04
+
+As a security administrator, I want to revoke an agent instantly so that compromised agents cannot continue operating.
+
+US-05
+
+As an operator, I want suspicious transactions to be risk evaluated so that dangerous actions can be stopped.
+
+US-06
+
+As an auditor, I want complete action logs so that I can investigate agent behavior.
+
+US-07
+
+As a security administrator, I want a global emergency stop so that I can immediately stop the entire fleet.
+
+17. Success Criteria
+
+The hackathon MVP is successful if:
+
+agents cannot bypass AgentGuard
+unauthorized operations are blocked
+budget violations are blocked
+suspicious operations receive appropriate risk decisions
+revoked agents cannot perform new operations
+emergency stop blocks agent actions
+every decision generates an audit record
+dashboard displays real system activity
+complete demo works end-to-end
+18. Demo Scenario
+Scenario 1 — Normal
+PaymentAgent
+     ↓
+₹5,000 payment
+     ↓
+Permission ✓
+Budget ✓
+Risk LOW ✓
+     ↓
+ALLOW
+Scenario 2 — Budget violation
+PaymentAgent
+     ↓
+₹15,000
+     ↓
+Limit = ₹10,000
+     ↓
+BLOCK
+Scenario 3 — Suspicious AI activity
+Agent
+ ↓
+Multiple unusual transactions
+ ↓
+AI Risk = 91
+ ↓
+HUMAN APPROVAL
+Scenario 4 — Emergency
+ADMIN
+ ↓
+EMERGENCY STOP
+ ↓
+ALL AGENTS
+ ↓
+BLOCKED
