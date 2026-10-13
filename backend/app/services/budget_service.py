@@ -25,4 +25,12 @@ class BudgetService:
             tx_limit=transaction_limit
         )
 
+    @staticmethod
+    def reset_budget(agent_id: str) -> None:
+        state_store.reset_agent_budget(agent_id)
+
+    @staticmethod
+    def reset_all_budgets() -> None:
+        state_store.reset_all_budgets()
+
 budget_service = BudgetService()

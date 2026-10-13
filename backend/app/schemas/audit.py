@@ -13,5 +13,8 @@ class AuditLogResponse(BaseModel):
     reason: str
     risk_score: int
     timestamp: datetime.datetime
+    previous_hash: Optional[str] = None
+    current_hash: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+

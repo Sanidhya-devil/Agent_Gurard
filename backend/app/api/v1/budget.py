@@ -53,3 +53,23 @@ def update_agent_budget(agent_id: str, data: BudgetUpdate, db: Session = Depends
         spent_today=spent,
         remaining_today=remaining
     )
+
+@router.post("/agents/{agent_id}/budget/reset", response_model=BudgetResponse)
+def reset_agent_budget(agent_id: str, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    budget_service.reset_budget(agent_id)
+    spent, remaining = budget_service.get_budget_status(agent.id, agent.daily_limit, agent.transaction_limit)
+    return BudgetResponse(
+        agent_id=agent.id,
+        daily_limit=agent.daily_limit,
+        transaction_limit=agent.transaction_limit,
+        spent_today=spent,
+        remaining_today=remaining
+    )
+
+@router.post("/budget/reset-all")
+def reset_all_budgets():
+    budget_service.reset_all_budgets()
+    return {"status": "SUCCESS", "message": "All agent daily budget counters have been reset to zero."}

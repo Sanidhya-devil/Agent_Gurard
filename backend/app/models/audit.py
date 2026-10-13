@@ -15,3 +15,6 @@ class AuditLog(Base):
     reason = Column(Text, nullable=False)
     risk_score = Column(Integer, default=0, nullable=False)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    previous_hash = Column(String(64), nullable=True)
+    current_hash = Column(String(64), nullable=True)
+

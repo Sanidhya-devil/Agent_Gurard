@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Sparkles,
   UserCheck,
+  Flame,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ interface SidebarProps {
   pendingApprovalsCount: number;
   isEmergencyStopped: boolean;
   onToggleEmergencyStop: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingApprovalsCount,
   isEmergencyStopped,
   onToggleEmergencyStop,
+  onOpenCommandPalette,
 }) => {
   const navSections = [
     {
@@ -63,8 +66,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           id: 'customers',
-          label: 'Fake Customers & Accounts',
+          label: 'Test Data',
           icon: UserCheck,
+          isSpecial: true,
+        },
+        {
+          id: 'redteam',
+          label: 'Red Team Attacks',
+          icon: Flame,
           isSpecial: true,
         },
       ],
@@ -82,24 +91,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-zinc-100 tracking-tight">AgentGuard</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
-                PRO
-              </span>
             </div>
             <span className="text-[11px] text-zinc-500 font-mono">Control Plane v1.0</span>
           </div>
         </div>
 
         {/* Quick Search Shortcut */}
-        <div className="mt-3.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-900/70 border border-zinc-850 text-xs text-zinc-500">
+        <button
+          onClick={onOpenCommandPalette}
+          className="mt-3.5 w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-850 text-xs text-zinc-400 hover:text-zinc-200 transition group cursor-pointer text-left focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          title="Quick navigation (⌘K or Ctrl+K)"
+          aria-label="Open quick navigation command palette"
+        >
           <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-zinc-500" />
-            <span className="text-[11px]">Quick navigation...</span>
+            <Search className="w-3.5 h-3.5 text-zinc-500 group-hover:text-indigo-400 transition-colors" />
+            <span className="text-xs">Quick navigation...</span>
           </div>
-          <kbd className="font-mono text-[10px] px-1 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+          <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-750 group-hover:border-zinc-600">
             ⌘K
           </kbd>
-        </div>
+        </button>
       </div>
 
       {/* Nav Menu */}

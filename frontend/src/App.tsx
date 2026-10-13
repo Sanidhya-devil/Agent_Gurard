@@ -8,6 +8,8 @@ import { ApprovalQueue } from './pages/ApprovalQueue';
 import { AuditLogViewer } from './pages/AuditLogViewer';
 import { DemoSandbox } from './pages/DemoSandbox';
 import { CustomerSimulator } from './pages/CustomerSimulator';
+import { RedTeamTesting } from './pages/RedTeamTesting';
+import { CommandPalette } from './components/CommandPalette';
 import { AlertOctagon } from 'lucide-react';
 import { api } from './services/api';
 import {
@@ -36,6 +38,29 @@ export const App: React.FC = () => {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [auditFilter, setAuditFilter] = useState<string>('ALL');
+  const [auditSearch, setAuditSearch] = useState<string>('');
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+
+  // Global Keyboard Shortcut: ⌘K or Ctrl+K to toggle Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleNavigateTab = (tab: string, filter?: string, search?: string) => {
+    if (tab === 'audit') {
+      if (filter) setAuditFilter(filter);
+      if (search !== undefined) setAuditSearch(search);
+    }
+    setActiveTab(tab);
+  };
 
   const fetchAllData = async () => {
     try {
@@ -135,10 +160,11 @@ export const App: React.FC = () => {
       {/* Left Sleek Linear Sidebar */}
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavigateTab}
         pendingApprovalsCount={pendingApprovalsCount}
         isEmergencyStopped={emergencyStatus.global_stop}
         onToggleEmergencyStop={handleToggleEmergencyStop}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Right Content Panel */}
@@ -184,7 +210,9 @@ export const App: React.FC = () => {
                   analytics={analytics}
                   agents={agents}
                   transactions={transactions}
-                  setActiveTab={setActiveTab}
+                  setActiveTab={handleNavigateTab}
+                  isEmergencyStopped={emergencyStatus.global_stop}
+                  onToggleEmergencyStop={handleToggleEmergencyStop}
                 />
               )}
 
@@ -219,6 +247,8 @@ export const App: React.FC = () => {
                 <AuditLogViewer
                   logs={auditLogs}
                   onRefresh={fetchAllData}
+                  initialFilter={auditFilter}
+                  initialSearch={auditSearch}
                 />
               )}
 
@@ -238,6 +268,13 @@ export const App: React.FC = () => {
                   setActiveTab={setActiveTab}
                 />
               )}
+
+              {activeTab === 'redteam' && (
+                <RedTeamTesting
+                  onRefreshAll={fetchAllData}
+                  setActiveTab={setActiveTab}
+                />
+              )}
             </>
           )}
         </main>
@@ -247,6 +284,15 @@ export const App: React.FC = () => {
           AgentGuard • Autonomous Financial AI Governance Control Plane • Fail-Closed Policy Engine
         </footer>
       </div>
+
+      {/* Quick Navigation Command Palette (⌘K / Ctrl+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onNavigate={handleNavigateTab}
+        onTriggerKillSwitch={handleToggleEmergencyStop}
+        isEmergencyStopped={emergencyStatus.global_stop}
+      />
     </div>
   );
 };

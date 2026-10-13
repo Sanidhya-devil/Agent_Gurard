@@ -64,6 +64,8 @@ export interface AuditLog {
   reason: string;
   risk_score: number;
   timestamp: string;
+  previous_hash?: string;
+  current_hash?: string;
 }
 
 export interface DashboardStats {
@@ -159,5 +161,42 @@ export interface CustomerSimulateResult {
   simulated_tx_id?: string;
   approval_id?: string;
   message: string;
+}
+
+export interface ChainVerificationResult {
+  status: 'VERIFIED' | 'TAMPER_DETECTED' | 'EMPTY';
+  is_valid: boolean;
+  total_records: number;
+  genesis_hash?: string;
+  tip_hash?: string;
+  algorithm?: string;
+  tamper_type?: string;
+  block_index?: number;
+  event_id?: string;
+  expected_previous_hash?: string;
+  actual_previous_hash?: string;
+  stored_hash?: string;
+  recomputed_hash?: string;
+  message: string;
+  verification_time: string;
+}
+
+export interface ComplianceReport {
+  report_id: string;
+  title: string;
+  standard: string;
+  generated_at: string;
+  ledger_integrity: ChainVerificationResult;
+  executive_summary: {
+    total_events_evaluated: number;
+    authorized_allowed_count: number;
+    denied_fail_closed_count: number;
+    human_approval_escalated_count: number;
+    enforcement_rate: string;
+    ledger_tampering_detected: boolean;
+  };
+  denial_breakdown: Record<string, number>;
+  compliance_attestation: string;
+  csv_export: string;
 }
 

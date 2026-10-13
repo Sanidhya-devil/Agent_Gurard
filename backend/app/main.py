@@ -15,7 +15,8 @@ from app.api.v1 import (
     approvals,
     transactions,
     simulator,
-    customers
+    customers,
+    redteam
 )
 
 @asynccontextmanager
@@ -58,6 +59,7 @@ app.include_router(approvals.router, prefix=f"{settings.API_V1_STR}/approvals", 
 app.include_router(transactions.router, prefix=f"{settings.API_V1_STR}/transactions", tags=["Transaction Activity"])
 app.include_router(simulator.router, prefix=f"{settings.API_V1_STR}/simulator", tags=["Demo Simulator"])
 app.include_router(customers.router, prefix=f"{settings.API_V1_STR}/customers", tags=["Customer Simulator"])
+app.include_router(redteam.router, prefix=f"{settings.API_V1_STR}/redteam", tags=["Red Team Attack Battery"])
 
 @app.get("/")
 def root():

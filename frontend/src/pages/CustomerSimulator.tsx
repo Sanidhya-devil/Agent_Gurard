@@ -471,9 +471,9 @@ export const CustomerSimulator: React.FC<CustomerSimulatorProps> = ({
               <input
                 type="number"
                 min="1"
-                step="100"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                step="any"
+                value={amount === 0 ? '' : amount}
+                onChange={(e) => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
                 className="w-full bg-zinc-900 border border-zinc-750 rounded-lg px-3 py-2 text-xs text-zinc-100 font-mono focus:outline-none focus:border-indigo-500"
                 required
               />
@@ -839,9 +839,9 @@ export const CustomerSimulator: React.FC<CustomerSimulatorProps> = ({
                   <input
                     type="number"
                     min="0"
-                    step="1000"
-                    value={newCustBalance}
-                    onChange={(e) => setNewCustBalance(Number(e.target.value))}
+                    step="any"
+                    value={newCustBalance === 0 ? '' : newCustBalance}
+                    onChange={(e) => setNewCustBalance(e.target.value === '' ? 0 : Number(e.target.value))}
                     className="w-full bg-zinc-900 border border-zinc-750 rounded-lg px-3 py-2 text-xs text-zinc-100 font-mono focus:outline-none focus:border-indigo-500"
                   />
                 </div>

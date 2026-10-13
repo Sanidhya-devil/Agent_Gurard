@@ -134,6 +134,28 @@ class StateStore:
 
             return True, "Budget validated and reserved", remaining
 
+    def reset_agent_budget(self, agent_id: str, date_str: Optional[str] = None) -> None:
+        if date_str is None:
+            date_str = datetime.date.today().isoformat()
+        key = f"agentguard:budget:{agent_id}:{date_str}"
+        with self._lock:
+            self._budget_counters[key] = 0.0
+            if self._redis_client:
+                try:
+                    self._redis_client.delete(key)
+                except Exception:
+                    pass
+
+    def reset_all_budgets(self) -> None:
+        with self._lock:
+            self._budget_counters.clear()
+            if self._redis_client:
+                try:
+                    for key in self._redis_client.scan_iter("agentguard:budget:*"):
+                        self._redis_client.delete(key)
+                except Exception:
+                    pass
+
     def reset_state_for_tests(self):
         with self._lock:
             self._memory_data = {"agentguard:global_stop": "false"}

@@ -10,6 +10,8 @@ import {
   Customer,
   CustomerCreateInput,
   CustomerSimulateResult,
+  ChainVerificationResult,
+  ComplianceReport,
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -144,6 +146,43 @@ export const api = {
     return handleResponse<AuditLog[]>(res);
   },
 
+  verifyAuditChain: async (): Promise<ChainVerificationResult> => {
+    const res = await fetch(`${API_BASE}/audit/verify-chain`);
+    return handleResponse<ChainVerificationResult>(res);
+  },
+
+  getComplianceReport: async (): Promise<ComplianceReport> => {
+    const res = await fetch(`${API_BASE}/audit/compliance-report`);
+    return handleResponse<ComplianceReport>(res);
+  },
+
+  simulateAuditTamper: async (eventId?: string): Promise<{
+    status: string;
+    tampered_event_id: string;
+    previous_reason: string;
+    new_reason: string;
+    message: string;
+  }> => {
+    const url = eventId
+      ? `${API_BASE}/audit/simulate-tamper?event_id=${encodeURIComponent(eventId)}`
+      : `${API_BASE}/audit/simulate-tamper`;
+    const res = await fetch(url, { method: 'POST' });
+    return handleResponse(res);
+  },
+
+  repairAuditChain: async (): Promise<{
+    status: string;
+    recomputed_records: number;
+    verification: ChainVerificationResult;
+  }> => {
+    const res = await fetch(`${API_BASE}/audit/repair-chain`, { method: 'POST' });
+    return handleResponse(res);
+  },
+
+  downloadAuditCsv: () => {
+    window.open(`${API_BASE}/audit/export/csv`, '_blank');
+  },
+
   // Sandbox Demo Scenarios
   runDemoScenario: async (scenarioId: number): Promise<any> => {
     const res = await fetch(`${API_BASE}/simulator/demo-scenario/${scenarioId}`, {
@@ -219,6 +258,36 @@ export const api = {
       body: JSON.stringify(payload)
     });
     return handleResponse<CustomerSimulateResult>(res);
+  },
+
+  // Red Team Attack Battery
+  getRedTeamVectors: async (): Promise<{ status: string; vectors: any[] }> => {
+    const res = await fetch(`${API_BASE}/redteam/vectors`);
+    return handleResponse(res);
+  },
+
+  executeRedTeamVector: async (vectorId: string, customMemo?: string): Promise<{ status: string; vector_id: string; result: any }> => {
+    const res = await fetch(`${API_BASE}/redteam/execute/${vectorId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ custom_memo: customMemo }),
+    });
+    return handleResponse(res);
+  },
+
+  runRedTeamBattery: async (): Promise<{ status: string; report: any }> => {
+    const res = await fetch(`${API_BASE}/redteam/run-battery`, {
+      method: 'POST',
+    });
+    return handleResponse(res);
+  },
+
+  resetRedTeamFleet: async (): Promise<{ status: string; fleet: any }> => {
+    const res = await fetch(`${API_BASE}/redteam/reset`, {
+      method: 'POST',
+    });
+    return handleResponse(res);
   }
 };
+
 
