@@ -1,497 +1,475 @@
+Edit
+Today 9:28 PM
+give me prd  and trd for this project
+AgentGuard — Complete PRD & TRD
+Product Requirements Document + Technical Requirements Document
+
+Project: AgentGuard — A Governance Layer for Autonomous Financial Agents
+Team: CodoSolo
+Institution: Manipal University Jaipur
+Event: Hypnexis '26
+Version: 1.0 — Hackathon MVP
+Category: Artificial Intelligence, FinTech, Cybersecurity, AI Governance
+
+PART 1: PRODUCT REQUIREMENTS DOCUMENT (PRD)
 1. Product Overview
 1.1 Product Name
 
 AgentGuard
 
-Tagline
+1.2 Tagline
 
-Govern every agent. Control every action. Protect every transaction.
+Govern Every Agent. Control Every Action. Protect Every Transaction.
 
-1.2 Product Vision
+1.3 Executive Summary
 
-AgentGuard is a real-time governance and safety control plane for autonomous financial AI agents.
+AgentGuard is an AI-powered governance and security platform designed to control, monitor, and audit autonomous financial AI agents.
 
-It sits between autonomous agents and sensitive financial systems and ensures that every financial action is:
+As autonomous agents become capable of initiating payments, processing refunds, analyzing financial data, and performing other financial operations, organizations need a reliable mechanism to control their actions.
 
-authenticated
-authorized
-budget-controlled
-risk-evaluated
-auditable
-revocable
+AgentGuard introduces a centralized governance layer between autonomous AI agents and financial systems.
 
-The system provides operators with centralized control over a fleet of autonomous agents.
+Before a financial action is executed, AgentGuard evaluates the agent's identity, permissions, spending limits, transaction risk, and applicable security policies.
+
+Based on these checks, the system can:
+
+Allow a permitted action.
+Deny an unauthorized or unsafe action.
+Request human approval for a high-risk action.
+Revoke an agent's access.
+Stop all protected agent actions during an emergency.
+Record the decision in an audit trail.
+
+The hackathon MVP will use a simulated financial environment, allowing the complete governance process to be demonstrated without connecting to real banking systems.
 
 2. Problem Statement
+2.1 The Problem
 
-Autonomous AI agents can increasingly perform financial operations such as:
+Autonomous AI agents can perform complex operations with limited human intervention. However, providing these agents with access to financial systems introduces security, governance, and operational risks.
 
-payments
-refunds
-transfers
-loan processing
-investment decisions
-fraud investigation
-customer support actions
+Traditional permission systems may not be sufficient when agents operate dynamically, perform multiple actions, and make decisions based on changing transaction contexts.
 
-However, giving autonomous agents direct access to financial systems creates major risks.
+Organizations need a centralized mechanism to govern what each agent can do, how much it can spend, and when its actions require additional scrutiny.
 
-Major problems
+2.2 Key Problems
+Problem	Description	Potential Consequence
+Excessive permissions	Agents have access to operations they do not need.	Unauthorized actions
+Uncontrolled spending	Agents initiate transactions beyond their intended financial limits.	Financial losses
+Difficult revocation	Operators cannot reliably stop a compromised agent.	Continued malicious activity
+Limited visibility	Operators lack a centralized view of agent activity.	Delayed incident detection
+Poor auditability	Decisions lack sufficient logs and explanations.	Difficult investigations
+Contextual risk	Conventional authorization does not evaluate unusual transaction behavior.	Risky actions may be approved
+2.3 Proposed Solution
 
-1. Excessive permissions
+AgentGuard provides a centralized policy enforcement and monitoring layer that intercepts financial actions before they reach protected financial services.
 
-An agent may have access to financial operations it does not actually need.
+Every protected action must pass through the governance pipeline.
 
-2. Uncontrolled spending
+Core principle:
 
-A compromised or malfunctioning agent could perform multiple transactions.
+No autonomous agent should be able to bypass AgentGuard and directly execute a protected financial operation.
 
-3. Difficult revocation
+3. Product Vision
 
-Removing an agent's access after deployment may not immediately stop its actions.
+To enable the safe, secure, transparent, and responsible adoption of autonomous financial agents across banking and fintech ecosystems.
 
-4. Lack of centralized control
+AgentGuard aims to make autonomous financial operations more controllable by combining deterministic security policies with AI-assisted risk assessment.
 
-Operators may not have a single dashboard to monitor autonomous agents.
+4. Product Objectives
 
-5. Poor auditability
+The primary objectives of the hackathon MVP are:
 
-Organizations need to know:
+Provide identity and access management for autonomous agents.
+Enforce granular, agent-specific permissions.
+Apply transaction and daily spending limits.
+Identify suspicious transaction patterns through a risk engine.
+Enable rapid agent revocation.
+Provide a fleet-wide emergency stop.
+Maintain comprehensive audit logs.
+Provide an operator dashboard for monitoring and control.
+Demonstrate the complete system through a working application.
+Success Principle
 
-Who performed the action?
-What did they do?
-Why was it allowed?
-What policy allowed it?
+The project should prioritize working security controls and a reliable end-to-end demonstration over the number of features.
 
-6. AI-specific risks
+5. Target Users
+5.1 Financial Operations Operator
 
-Traditional authorization alone cannot evaluate contextual risk associated with an AI-generated transaction.
+Responsible for monitoring transactions and agent activity.
 
-3. Proposed Solution
+Capabilities:
 
-AgentGuard introduces a governance layer between AI agents and financial services.
+View registered agents.
+Monitor transaction decisions.
+Review budget utilization.
+Investigate risk alerts.
+Review pending approvals.
+5.2 Security Administrator
 
-Core architecture
-                ┌──────────────────────┐
-                │   Autonomous Agents  │
-                │                      │
-                │ Payment │ Loan │ AI  │
-                └──────────┬───────────┘
-                           │
-                           ▼
-                ┌──────────────────────┐
-                │      AgentGuard      │
-                │ Governance Layer     │
-                ├──────────────────────┤
-                │ Identity             │
-                │ Permissions          │
-                │ Budget Control       │
-                │ AI Risk Engine       │
-                │ Revocation           │
-                │ Kill Switch          │
-                │ Audit Logging        │
-                └──────────┬───────────┘
-                           │
-                           ▼
-                ┌──────────────────────┐
-                │ Financial Services   │
-                │ Payment / Banking    │
-                │ APIs / Simulator     │
-                └──────────────────────┘
-Fundamental rule
+Responsible for controlling agent access.
 
-No autonomous agent can directly access a sensitive financial API.
+Capabilities:
 
-Every action must pass through AgentGuard.
+Register agents.
+Configure permissions.
+Set spending limits.
+Revoke agents.
+Activate the emergency stop.
+Restore normal operations through an authorized workflow.
+5.3 Governance and Audit Team
 
-4. Goals
-Primary Goals
-G1 — Least-Privilege Access
+Responsible for investigating system activity and reviewing decisions.
 
-Allow administrators to define exactly what each agent can do.
+Capabilities:
 
-Example:
+Search audit records.
+Filter allowed and denied actions.
+Review risk scores and decision reasons.
+Investigate suspicious activity.
+5.4 Autonomous AI Agent
 
-PaymentAgent
+A software entity that requests a protected financial operation.
 
-✓ create_payment
-✓ view_balance
+Examples:
 
-✗ modify_user
-✗ create_loan
-✗ withdraw_without_limit
-G2 — Dynamic Financial Controls
+Payment Agent
+Loan Agent
+Fraud Detection Agent
+Investment Agent
+Customer Support Agent
 
-Each agent receives a configurable spending limit.
+For the MVP, these agents can be simulated rather than implemented as independent production AI systems.
 
-Example:
+6. Functional Requirements
 
-Daily Limit = ₹50,000
+The following requirements define the expected behavior of AgentGuard.
 
-Used = ₹42,000
-
-Remaining = ₹8,000
-
-The system blocks transactions exceeding the remaining budget.
-
-G3 — AI-Based Risk Assessment
-
-Evaluate transactions using contextual information.
-
-Example:
-
-Transaction:
-₹25,000
-
-Agent:
-PaymentAgent
-
-Risk:
-HIGH
-
-Reason:
-Unusual transaction frequency
-
-Decision:
-
-HUMAN APPROVAL REQUIRED
-G4 — Real-Time Revocation
-
-Administrators can immediately revoke an agent.
-
-Agent Status
-
-ACTIVE → REVOKED
-
-Future requests are rejected.
-
-G5 — Emergency Shutdown
-
-A global emergency switch stops the entire agent fleet.
-
-NORMAL
-   ↓
-EMERGENCY STOP
-   ↓
-ALL AGENTS BLOCKED
-G6 — Complete Auditability
-
-Every action must produce an audit event.
-
-5. Non-Goals
-
-For the hackathon MVP, AgentGuard will not attempt to:
-
-become an actual banking system
-process real money
-replace financial institutions
-provide regulatory certification
-train a foundation model
-implement every possible financial API
-support every possible AI agent framework
-
-The financial environment can be simulated.
-
-6. Target Users
-6.1 Security Administrator
-
-Responsibilities:
-
-manage agents
-assign permissions
-revoke agents
-trigger emergency shutdown
-review security events
-6.2 Financial Operations Manager
-
-Responsibilities:
-
-monitor transactions
-configure budgets
-review high-risk actions
-approve/reject transactions
-6.3 Security Auditor
-
-Responsibilities:
-
-inspect logs
-investigate suspicious actions
-track agent activity
-verify policy enforcement
-6.4 Autonomous Agent
-
-The agent is not a human user.
-
-It acts as a controlled system identity.
-
-7. Key Features
-Feature 1 — Agent Management
-
-Administrator can:
-
-register agent
-view agent
-activate/deactivate agent
-revoke agent
-assign permissions
-
-Agent information:
+Priority levels:
+
+P0: Essential for the MVP.
+P1: Important enhancement after the core workflow works.
+P2: Future development.
+ID	Feature	Requirement	Priority
+FR-01	Agent registration	Administrators can register agents.	P0
+FR-02	Agent authentication	Requests must identify an authenticated agent.	P0
+FR-03	Agent management	Operators can view agent status and configuration.	P0
+FR-04	Permission management	Administrators can assign granular permissions.	P0
+FR-05	Authorization	Every protected action is checked against policy.	P0
+FR-06	Budget control	Each agent has daily and per-transaction limits.	P0
+FR-07	Risk assessment	Transactions receive a risk score and explanation.	P0
+FR-08	Decision engine	Requests are allowed, denied, or sent for approval.	P0
+FR-09	Agent revocation	Administrators can revoke an agent's access.	P0
+FR-10	Emergency stop	Operators can stop protected actions across the fleet.	P0
+FR-11	Audit logging	Every decision and execution outcome is recorded.	P0
+FR-12	Operator dashboard	Operators can monitor agents and transactions.	P0
+FR-13	Human approval	Authorized operators can approve or reject pending actions.	P1
+FR-14	Metrics and monitoring	System performance and security events can be measured.	P1
+FR-15	Advanced policy engine	Integrate a dedicated policy-as-code engine such as OPA.	P2
+
+Scope clarification: P0 identifies the essential features, but the implementation order should be determined by dependencies. For example, authentication, authorization, and audit logging must work before the dashboard can reliably demonstrate them.
+
+7. Detailed Feature Requirements
+7.1 Agent Registration and Management
+
+An administrator must be able to register an agent with the following information:
 
 Agent ID
-Agent Name
-Agent Type
-Status
-Permissions
-Daily Budget
-Risk Level
-Created At
-Last Activity
-8. Permission Management
-
-AgentGuard uses granular permissions.
+Agent name
+Agent type
+Agent status
+Assigned permissions
+Daily spending limit
+Per-transaction limit
+Creation timestamp
+Last activity timestamp
 
 Example:
 
-PaymentAgent
-
-payment:create
-payment:view
-payment:refund
-
-Another agent:
-
-LoanAgent
-
-loan:create
-loan:view
-loan:update
-
-Authorization decision:
-
-Agent + Action + Resource
-             ↓
-       Policy Evaluation
-             ↓
-       ALLOW / DENY
-9. Dynamic Budget Control
-
-Every agent can have:
-
-Daily Limit
-Per Transaction Limit
-Remaining Budget
-Current Usage
-
-Example:
-
-Daily Limit: ₹50,000
-Transaction Limit: ₹10,000
-
-Request: ₹12,000
-
-Result:
-BLOCKED
-Reason:
-Per-transaction limit exceeded
-10. AI Risk Engine
-
-This is one of the most important parts of AgentGuard.
-
-The AI engine evaluates transaction context.
-
-Input
 {
-  "agent_id": "agent_001",
-  "amount": 25000,
-  "transaction_type": "payment",
-  "frequency": 8,
-  "recipient": "new_recipient",
-  "time": "02:30"
+  "agent_id": "payment-agent-001",
+  "name": "Payment Agent",
+  "type": "PAYMENT",
+  "status": "ACTIVE",
+  "daily_limit": 50000,
+  "transaction_limit": 10000
 }
-Risk engine output
+
+The limits are illustrative configuration values for the prototype.
+
+Acceptance Criteria
+Each agent has a unique identifier.
+Duplicate agent IDs are rejected.
+Inactive or revoked agents cannot execute protected actions.
+Only authorized administrators can modify agent configuration.
+7.2 Granular Permission Management
+
+AgentGuard must enforce permissions at the action level.
+
+Example:
+
+Permission	Payment Agent	Loan Agent	Fraud Agent
+View transactions	Yes	Yes	Yes
+Create payment	Yes	No	No
+Create loan	No	Yes	No
+Investigate fraud	No	No	Yes
+Revoke agents	No	No	No
+
+The final column values are illustrative. The actual permission matrix should be configured according to the intended role of each agent.
+
+Acceptance Criteria
+Permissions are stored and evaluated by the backend.
+The frontend cannot grant itself permissions.
+Unauthorized actions are rejected.
+Permission changes affect subsequent authorization decisions.
+7.3 Dynamic Budget Control
+
+Every agent should support:
+
+Daily spending limit.
+Per-transaction limit.
+Current daily spending.
+Remaining daily budget.
+Budget utilization percentage.
+
+Example:
+
+Daily Limit:       ₹50,000
+Current Spending:  ₹35,000
+Remaining Budget:  ₹15,000
+
+Requested Amount:  ₹20,000
+
+Decision: DENY
+Reason: Daily budget would be exceeded.
+Acceptance Criteria
+Transactions exceeding the per-transaction limit are denied.
+Transactions exceeding the remaining daily budget are denied.
+Concurrent requests cannot collectively exceed the enforced limit.
+Budget usage reflects successful or reserved transactions according to a consistent transaction lifecycle.
+7.4 AI Risk Engine
+
+The risk engine evaluates contextual transaction information.
+
+Potential inputs
+Transaction amount.
+Transaction type.
+Transaction frequency.
+Recipient history.
+Time of transaction.
+Agent behavior history.
+Budget utilization.
+Previous denied requests.
+Example input
+{
+  "agent_id": "payment-agent-001",
+  "action": "payment:create",
+  "amount": 25000,
+  "currency": "INR",
+  "recipient": "new-recipient-001",
+  "transaction_frequency": 8,
+  "recipient_is_new": true
+}
+Example output
 {
   "risk_score": 87,
   "risk_level": "HIGH",
-  "reason": "Unusual transaction pattern",
+  "reason": "Unusual transaction amount and recipient pattern",
   "recommended_action": "HUMAN_APPROVAL"
 }
-Decision
-Risk < 40
-    ↓
-ALLOW
 
-40–75
-    ↓
-MONITOR / CONDITIONAL
+These values illustrate the expected response format; they are not model evaluation results.
 
->75
-    ↓
-HUMAN APPROVAL / BLOCK
+Risk Decision Principles
+Risk Level	Possible Response
+Low	Allow if all security policies pass
+Medium	Apply additional checks or monitoring
+High	Require human approval or deny
+Critical	Deny according to the configured security policy
 
-The exact thresholds should be configurable rather than hard-coded into the UI.
+Risk thresholds must be configurable.
 
-11. Real-Time Revocation
+Important: The risk engine recommends a decision; it must not override mandatory permission, revocation, budget, or emergency-stop controls.
 
-Admin selects:
+7.5 Real-Time Agent Revocation
 
-Agent: PaymentAgent
-Action: REVOKE
+Administrators must be able to revoke an individual agent.
 
-AgentGuard immediately changes:
+Expected behavior:
 
-ACTIVE → REVOKED
+ACTIVE
+   |
+   v
+REVOKED
+   |
+   v
+Subsequent protected requests denied
+Acceptance Criteria
+Revocation takes effect for subsequent authorization decisions.
+Revoked agents cannot continue using valid-looking requests to bypass the revocation check.
+Revocation events are audited.
+The dashboard displays the updated status.
 
-Any subsequent request:
+Already executed transactions cannot be retroactively undone by revocation.
 
-403 AGENT_REVOKED
-12. Emergency Kill Switch
+7.6 Emergency Kill Switch
 
-Global emergency control:
+The emergency stop disables new protected financial actions across the fleet.
 
-EMERGENCY STOP
+Example:
 
-When activated:
+SYSTEM STATUS: ACTIVE
 
-GlobalState = STOPPED
+Administrator activates emergency stop.
 
-All sensitive agent actions are denied.
+SYSTEM STATUS: STOPPED
 
-Agent A → BLOCKED
-Agent B → BLOCKED
-Agent C → BLOCKED
-Agent D → BLOCKED
+New protected actions:
+DENIED
+Acceptance Criteria
+Only authorized administrators can activate or release the emergency stop.
+Every protected request checks the authoritative emergency state.
+The system rejects new actions while the stop is active.
+Activation and release events are recorded.
+The backend, not merely the frontend, enforces the stop.
 
-This should be fail-closed.
+For safety, the system must fail closed if it cannot verify whether a protected action is permitted.
 
-13. Audit Logging
+7.7 Audit Logging
 
-Every request generates an audit event.
+AgentGuard must maintain an audit record for each request and its resulting decision.
 
 Example:
 
 {
-  "event_id": "evt_123",
-  "agent_id": "agent_001",
+  "event_id": "evt-001",
+  "agent_id": "payment-agent-001",
   "action": "payment:create",
   "amount": 5000,
-  "risk_score": 23,
   "decision": "ALLOW",
-  "reason": "Permission and budget valid",
-  "timestamp": "2026-10-04T21:00:00Z"
+  "risk_score": 18,
+  "reason": "Permission and budget checks passed",
+  "execution_status": "SUCCESS",
+  "timestamp": "2026-10-12T10:30:00Z"
 }
+Acceptance Criteria
+Allowed and denied requests are logged.
+Approval requests and approval outcomes are logged.
+Execution failures are logged.
+Records include a timestamp, agent, action, decision, and reason.
+Normal dashboard operations cannot modify or delete historical audit records.
+Sensitive credentials are never written to audit logs.
+7.8 Operator Dashboard
 
-Audit records should be immutable from the normal dashboard workflow.
+The dashboard provides a centralized view of the governance system.
 
-14. Operator Dashboard
+Main Sections
 
-Dashboard should show:
+1. Overview
 
-Overview
-Active Agents       128
-Allowed Actions     12,821
-Blocked Actions       421
-High Risk              7
+Active agents.
+Allowed actions.
+Blocked actions.
+High-risk requests.
+Emergency-stop status.
 
-Important: These numbers are demo/mock values unless generated from your actual system.
+2. Agent Management
 
-Dashboard sections
-Agent status
-Transaction activity
-Risk alerts
-Budget usage
-Blocked requests
-Audit logs
-Emergency control
-15. Functional Requirements
-ID	Requirement	Priority
-FR-01	Register agent	P0
-FR-02	Authenticate agent	P0
-FR-03	Configure permissions	P0
-FR-04	Authorize requests	P0
-FR-05	Configure spending limits	P0
-FR-06	Check budget	P0
-FR-07	AI risk evaluation	P0
-FR-08	Revoke agent	P0
-FR-09	Global emergency stop	P0
-FR-10	Audit all actions	P0
-FR-11	Operator dashboard	P0
-FR-12	Human approval workflow	P1
-FR-13	Prometheus metrics	P1
-FR-14	Advanced policy engine	P2
-16. User Stories
-US-01
+Registered agents.
+Agent status.
+Permissions.
+Spending limits.
+Revoke controls.
 
-As an administrator, I want to register an AI agent so that I can control its activities.
+3. Transaction Monitor
 
-US-02
+Recent requests.
+Transaction amount.
+Risk score.
+Decision.
+Decision reason.
 
-As an administrator, I want to assign specific permissions so that agents follow least-privilege access.
+4. Risk Monitor
 
-US-03
+High-risk requests.
+Unusual activity.
+Pending approvals.
 
-As an operator, I want to configure spending limits so that an agent cannot exceed its financial authority.
+5. Audit Logs
 
-US-04
+Searchable action history.
+Decision filters.
+Agent filters.
+Date filters.
 
-As a security administrator, I want to revoke an agent instantly so that compromised agents cannot continue operating.
+6. Emergency Control
 
-US-05
+Current system state.
+Emergency-stop activation.
+Authorized release.
 
-As an operator, I want suspicious transactions to be risk evaluated so that dangerous actions can be stopped.
+Any figures displayed in the dashboard must come from the application or be explicitly identified as sample data.
 
-US-06
+8. Non-Functional Requirements
+ID	Requirement	Description
+NFR-01	Security	All protected actions must pass through backend enforcement.
+NFR-02	Reliability	The system must fail closed when a required security check cannot be completed.
+NFR-03	Performance	Authorization should have low, measurable latency.
+NFR-04	Auditability	Every decision should have a traceable record.
+NFR-05	Consistency	Budget enforcement must be safe under concurrent requests.
+NFR-06	Maintainability	Governance logic should be separated into modules.
+NFR-07	Usability	Operators should understand decisions and system status quickly.
+NFR-08	Deployability	The frontend and backend should be deployable independently.
+NFR-09	Validation	API inputs must be validated server-side.
+NFR-10	Privacy	Credentials and unnecessary sensitive information must not be exposed.
+9. MVP Boundaries
+Included in the MVP
+Agent registration and identity.
+Granular permissions.
+Daily and per-transaction budgets.
+AI-assisted risk assessment.
+Allow/deny/approval decisions.
+Agent revocation.
+Emergency stop.
+Audit logs.
+Operator dashboard.
+Simulated financial execution.
+Public deployment and repository.
+End-to-end demonstration.
+Excluded from the MVP
+Real-money transactions.
+Direct production banking integration.
+Training a foundation model.
+Blockchain-based auditing.
+A complex microservices architecture.
+Production regulatory certification.
+Large-scale enterprise deployment.
 
-As an auditor, I want complete action logs so that I can investigate agent behavior.
+This boundary keeps the project achievable while preserving its core value proposition.
 
-US-07
+10. User Stories
+ID	User Story
+US-01	As an administrator, I want to register an agent so that its activities can be controlled.
+US-02	As an administrator, I want to assign permissions so that agents cannot perform unauthorized operations.
+US-03	As an operator, I want to configure spending limits so that an agent cannot exceed its financial authority.
+US-04	As an operator, I want suspicious transactions to receive risk assessments so that unsafe actions can be stopped.
+US-05	As a security administrator, I want to revoke an agent so that its future requests are denied.
+US-06	As a security administrator, I want to stop the agent fleet during an incident.
+US-07	As an auditor, I want to inspect decisions and reasons so that I can investigate agent activity.
+US-08	As an operator, I want a centralized dashboard so that I can monitor the system.
+11. Acceptance Tests
 
-As a security administrator, I want a global emergency stop so that I can immediately stop the entire fleet.
+The MVP is considered functionally complete when these scenarios work.
 
-17. Success Criteria
-
-The hackathon MVP is successful if:
-
-agents cannot bypass AgentGuard
-unauthorized operations are blocked
-budget violations are blocked
-suspicious operations receive appropriate risk decisions
-revoked agents cannot perform new operations
-emergency stop blocks agent actions
-every decision generates an audit record
-dashboard displays real system activity
-complete demo works end-to-end
-18. Demo Scenario
-Scenario 1 — Normal
-PaymentAgent
-     ↓
-₹5,000 payment
-     ↓
-Permission ✓
-Budget ✓
-Risk LOW ✓
-     ↓
-ALLOW
-Scenario 2 — Budget violation
-PaymentAgent
-     ↓
-₹15,000
-     ↓
-Limit = ₹10,000
-     ↓
-BLOCK
-Scenario 3 — Suspicious AI activity
-Agent
- ↓
-Multiple unusual transactions
- ↓
-AI Risk = 91
- ↓
-HUMAN APPROVAL
-Scenario 4 — Emergency
-ADMIN
- ↓
-EMERGENCY STOP
- ↓
-ALL AGENTS
- ↓
-BLOCKED
+Test	Input	Expected Result
+AT-01	Registered agent requests an authorized action within its limits	Allowed if risk policy passes
+AT-02	Agent requests an unassigned permission	Denied
+AT-03	Transaction exceeds per-transaction limit	Denied
+AT-04	Transaction exceeds remaining daily budget	Denied
+AT-05	High-risk request	Approval required or denied according to policy
+AT-06	Revoked agent submits a request	Denied
+AT-07	Emergency stop is active	New protected action denied
+AT-08	Agent submits a malformed request	Rejected during validation
+AT-09	A transaction request is processed	Audit record generated
+AT-10	Two concurrent requests compete for the same budget	Budget limit remains enforced
+AT-11	Financial simulator fails	Failure recorded; no false success reported
+AT-12	Dashboard loads activity	Values correspond to actual application records

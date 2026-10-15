@@ -1,396 +1,586 @@
-1. Technical Architecture
+PART 2: TECHNICAL REQUIREMENTS DOCUMENT (TRD)
+12. Technical Overview
+12.1 Architecture
 
-Recommended architecture:
+AgentGuard uses a modular application architecture.
 
-                    ┌─────────────────────┐
-                    │   React Dashboard   │
-                    │ TypeScript +        │
-                    │ Tailwind            │
-                    └──────────┬──────────┘
-                               │
-                               │ REST API
-                               ▼
-                 ┌───────────────────────────┐
-                 │      FastAPI Backend      │
-                 │                           │
-                 │ Authentication            │
-                 │ Agent Management           │
-                 │ Authorization              │
-                 │ Budget Controller          │
-                 │ Risk Engine                │
-                 │ Revocation                 │
-                 │ Emergency Control          │
-                 │ Audit Service              │
-                 └──────┬─────────┬──────────┘
-                        │         │
-                ┌───────▼───┐ ┌──▼──────────┐
-                │ PostgreSQL│ │   Redis     │
-                │           │ │             │
-                │ Agents    │ │ Budget      │
-                │ Policies  │ │ Revocation  │
-                │ Audit     │ │ Kill Switch │
-                └───────────┘ └─────────────┘
-                        │
-                        ▼
-               ┌──────────────────┐
-               │ Financial        │
-               │ Simulator/API    │
-               └──────────────────┘
-2. Technology Stack
-Frontend
-React
-TypeScript
-Vite
-Tailwind CSS
-Recharts
-Axios
-Backend
-Python
-FastAPI
-Pydantic
-SQLAlchemy
-Uvicorn
-Database
-PostgreSQL
-Real-Time State
-Redis
+The frontend communicates with a FastAPI backend. The backend performs authentication, authorization, budget enforcement, risk evaluation, and decision-making before interacting with a simulated financial service.
 
-Use Redis for:
+PostgreSQL stores persistent records, while Redis supports shared runtime state and atomic operations where needed.
 
-emergency state
-revocation state
-rate limiting
-budget counters
-short-lived risk/context data
-3. AI Layer
+High-Level Architecture
+┌────────────────────────────────────────────┐
+│           AUTONOMOUS AI AGENTS              │
+│                                            │
+│  Payment Agent | Loan Agent | Fraud Agent  │
+└─────────────────────┬──────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────────┐
+│               AGENTGUARD API               │
+│                                            │
+│  1. Authentication                         │
+│  2. Emergency Stop Check                   │
+│  3. Agent Revocation Check                 │
+│  4. Permission Evaluation                  │
+│  5. Budget Enforcement                     │
+│  6. AI Risk Assessment                     │
+│  7. Decision Engine                        │
+│  8. Execution Orchestration                │
+│  9. Audit Logging                           │
+└───────────┬──────────────────┬─────────────┘
+            │                  │
+            ▼                  ▼
+┌──────────────────┐  ┌─────────────────────┐
+│   PostgreSQL     │  │        Redis        │
+│                  │  │                     │
+│ Agents           │  │ Revocation state    │
+│ Permissions      │  │ Emergency state     │
+│ Transactions     │  │ Budget counters     │
+│ Policies         │  │ Rate limits         │
+│ Audit events     │  │ Shared runtime data │
+└──────────────────┘  └─────────────────────┘
+            │
+            ▼
+┌────────────────────────────────────────────┐
+│         SIMULATED FINANCIAL SERVICE        │
+│                                            │
+│ Payment execution | Transaction outcomes  │
+└────────────────────────────────────────────┘
+                      ▲
+                      │ REST API
+┌─────────────────────┴──────────────────────┐
+│               OPERATOR UI                  │
+│                                            │
+│ Agents | Policies | Transactions | Risks   │
+│ Audit Logs | Budget Monitor | Kill Switch  │
+└────────────────────────────────────────────┘
 
-For the hackathon MVP, the AI Risk Engine can be implemented as a separate service/module.
+Security boundary: The simulated financial service must not accept protected actions directly from agents. It should accept execution requests only from the trusted backend or an appropriately authenticated internal service.
 
-Transaction Context
-        ↓
-Feature Extraction
-        ↓
-Risk Model / LLM
-        ↓
-Risk Score
-        ↓
-Risk Classification
-        ↓
-Policy Decision
-Risk features
+13. Technology Stack
 
-Possible features:
+The following is the recommended stack for the hackathon implementation.
 
-transaction amount
-transaction frequency
-time of transaction
-recipient novelty
-agent historical behavior
-budget utilization
-previous failed requests
-transaction type
-4. Backend Modules
+Layer	Technology	Purpose
+Frontend	React	Dashboard interface
+Language	TypeScript	Type-safe frontend development
+Build tool	Vite	Frontend development and build
+Styling	Tailwind CSS	Responsive UI
+Charts	Recharts	Risk, activity, and budget visualization
+HTTP client	Axios	Frontend API communication
+Backend	Python	Governance logic
+API framework	FastAPI	REST API
+Validation	Pydantic	Request and response validation
+ORM	SQLAlchemy	Database interaction
+Database	PostgreSQL	Persistent application data
+Runtime state	Redis	Emergency state, revocation and atomic counters
+Risk engine	Python risk module	Contextual risk scoring
+Testing	Pytest	Backend and integration testing
+Containers	Docker	Reproducible development and deployment
+Optional technologies
 
-Recommended project structure:
+Open Policy Agent (OPA): Can be integrated later if a dedicated policy-as-code engine becomes useful.
 
+Prometheus and Grafana: Can be added for operational metrics and monitoring after the core MVP is functional.
+
+These optional technologies should not delay the primary implementation.
+
+14. Backend Architecture
+
+The backend should be organized into small modules with clear responsibilities.
+
+Recommended directory structure
 agentguard/
 │
 ├── backend/
 │   ├── app/
 │   │   ├── main.py
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   ├── security.py
+│   │   │   └── exceptions.py
 │   │   │
 │   │   ├── api/
 │   │   │   ├── agents.py
+│   │   │   ├── permissions.py
 │   │   │   ├── transactions.py
 │   │   │   ├── policies.py
 │   │   │   ├── approvals.py
+│   │   │   ├── audit.py
 │   │   │   └── admin.py
 │   │   │
 │   │   ├── services/
-│   │   │   ├── auth_service.py
-│   │   │   ├── policy_service.py
-│   │   │   ├── budget_service.py
-│   │   │   ├── risk_service.py
-│   │   │   ├── revocation_service.py
-│   │   │   └── audit_service.py
+│   │   │   ├── authentication.py
+│   │   │   ├── authorization.py
+│   │   │   ├── budget.py
+│   │   │   ├── risk_engine.py
+│   │   │   ├── revocation.py
+│   │   │   ├── emergency_stop.py
+│   │   │   ├── execution.py
+│   │   │   └── audit.py
 │   │   │
 │   │   ├── models/
 │   │   │   ├── agent.py
+│   │   │   ├── permission.py
 │   │   │   ├── policy.py
 │   │   │   ├── transaction.py
-│   │   │   └── audit.py
+│   │   │   ├── approval.py
+│   │   │   └── audit_event.py
 │   │   │
-│   │   ├── database/
-│   │   │   └── postgres.py
+│   │   ├── schemas/
+│   │   │   ├── agent.py
+│   │   │   ├── transaction.py
+│   │   │   └── decision.py
 │   │   │
-│   │   └── core/
-│   │       ├── config.py
-│   │       └── security.py
+│   │   └── database/
+│   │       ├── connection.py
+│   │       └── migrations/
 │   │
+│   ├── tests/
 │   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/
 │   │   ├── components/
+│   │   ├── pages/
 │   │   ├── services/
-│   │   └── hooks/
-│   │
-│   └── package.json
+│   │   ├── hooks/
+│   │   └── types/
+│   ├── package.json
+│   └── vite.config.ts
 │
 ├── docker-compose.yml
-├── README.md
-└── .env.example
-5. Database Design
-Agents
-agents
----------
-id
-name
-type
-status
-risk_level
-daily_limit
-transaction_limit
-created_at
-updated_at
-Example
-agent_001
-PaymentAgent
-PAYMENT
-ACTIVE
-MEDIUM
-50000
-10000
-Permissions
-permissions
------------
-id
-name
-description
+├── .env.example
+├── .gitignore
+└── README.md
 
-Examples:
+This is a proposed structure; directories can be introduced incrementally as the project grows.
+
+15. Request Processing Pipeline
+
+This is the most important technical workflow.
+
+Agent Request
+     |
+     v
+Validate Request
+     |
+     v
+Authenticate Agent
+     |
+     v
+Check Emergency Stop
+     |
+     v
+Check Agent Revocation
+     |
+     v
+Check Permissions
+     |
+     v
+Enforce Transaction & Daily Budgets
+     |
+     v
+Evaluate Transaction Risk
+     |
+     v
+Apply Decision Policy
+     |
+     +-------------------+
+     |                   |
+     v                   v
+    DENY            APPROVAL REQUIRED
+     |                   |
+     v                   v
+ Record Reason       Pending Approval
+     |
+     +------------------------------+
+                                    |
+                                    v
+                             ALLOW DECISION
+                                    |
+                                    v
+                         Execute Financial Action
+                                    |
+                                    v
+                           Record Outcome
+                                    |
+                                    v
+                              Audit Event
+
+The actual implementation should ensure that denied requests cannot reach the execution service.
+
+For approval-required requests, the system must create a pending record rather than execute the transaction immediately.
+
+When an operator approves a pending action, AgentGuard should recheck the current security conditions before execution. Approval must not bypass a newly activated emergency stop, a revoked agent, or a changed permission policy.
+
+16. API Design
+
+Use REST endpoints with a version prefix:
+
+/api/v1/
+16.1 Agent APIs
+Method	Endpoint	Purpose
+POST	/api/v1/agents	Register agent
+GET	/api/v1/agents	List agents
+GET	/api/v1/agents/{agent_id}	Get agent details
+PATCH	/api/v1/agents/{agent_id}	Update configuration
+POST	/api/v1/agents/{agent_id}/revoke	Revoke agent
+POST	/api/v1/agents/{agent_id}/activate	Reactivate agent, subject to authorization
+
+Reactivation must be an explicit administrative action and must not override the global emergency stop.
+
+16.2 Permission APIs
+Method	Endpoint	Purpose
+GET	/api/v1/permissions	List available permissions
+GET	/api/v1/agents/{agent_id}/permissions	View agent permissions
+PUT	/api/v1/agents/{agent_id}/permissions	Replace assigned permissions
+16.3 Transaction APIs
+Method	Endpoint	Purpose
+POST	/api/v1/authorize	Evaluate a protected action
+POST	/api/v1/transactions	Submit a transaction for governance and execution
+GET	/api/v1/transactions	List transactions
+GET	/api/v1/transactions/{transaction_id}	View transaction details
+
+The authorization endpoint should not execute a transaction merely because it returns ALLOW. Execution should be handled by a controlled orchestration flow that prevents the agent from changing the transaction after authorization.
+
+16.4 Budget APIs
+Method	Endpoint	Purpose
+GET	/api/v1/agents/{agent_id}/budget	Get budget status
+PUT	/api/v1/agents/{agent_id}/budget	Configure budget
+
+Example request:
+
+{
+  "daily_limit": 50000,
+  "transaction_limit": 10000,
+  "currency": "INR"
+}
+
+Amounts should use integer minor units or an appropriate decimal representation in the implementation to avoid floating-point currency errors.
+
+16.5 Emergency APIs
+Method	Endpoint	Purpose
+GET	/api/v1/admin/emergency-stop	Get emergency status
+POST	/api/v1/admin/emergency-stop	Activate emergency stop
+POST	/api/v1/admin/emergency-stop/release	Release emergency stop
+
+These endpoints require privileged administrative authentication.
+
+16.6 Audit APIs
+Method	Endpoint	Purpose
+GET	/api/v1/audit	Query audit records
+GET	/api/v1/audit/{event_id}	Get audit event details
+
+Supported filters may include:
+
+agent_id
+action
+decision
+risk_level
+start_date
+end_date
+17. API Request and Response Schemas
+17.1 Transaction Request
+
+Endpoint:
+
+POST /api/v1/transactions
+
+Request:
+
+{
+  "agent_id": "payment-agent-001",
+  "action": "payment:create",
+  "amount": 5000,
+  "currency": "INR",
+  "recipient_id": "merchant-123",
+  "idempotency_key": "req-unique-001"
+}
+
+The amount represents ₹5,000 if the API contract defines amount in rupees. The production implementation should document units explicitly and preferably use integer paise or decimal-safe currency handling.
+
+17.2 Allowed Response
+{
+  "transaction_id": "txn-001",
+  "decision": "ALLOW",
+  "risk_score": 18,
+  "risk_level": "LOW",
+  "reason": "Required permissions and budget checks passed",
+  "execution_status": "SUCCESS"
+}
+17.3 Denied Response
+{
+  "transaction_id": "txn-002",
+  "decision": "DENY",
+  "risk_level": "LOW",
+  "reason": "Transaction exceeds the configured budget",
+  "execution_status": "NOT_EXECUTED"
+}
+
+A low risk score does not make a transaction safe if it violates a mandatory policy.
+
+17.4 Human Approval Response
+{
+  "transaction_id": "txn-003",
+  "decision": "HUMAN_APPROVAL",
+  "risk_score": 87,
+  "risk_level": "HIGH",
+  "reason": "Unusual transaction pattern",
+  "execution_status": "PENDING_APPROVAL"
+}
+
+These examples define the intended contract; the exact schema should be implemented consistently across frontend and backend.
+
+18. Database Design
+
+PostgreSQL is the source of truth for persistent application records.
+
+18.1 Agents Table
+CREATE TABLE agents (
+    id UUID PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    daily_limit NUMERIC(18, 2) NOT NULL,
+    transaction_limit NUMERIC(18, 2) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+Possible status values:
+
+ACTIVE
+INACTIVE
+REVOKED
+
+Validate that limits are non-negative and that the per-transaction limit does not exceed the intended maximum daily limit unless explicitly allowed by policy.
+
+18.2 Permissions Table
+CREATE TABLE permissions (
+    id UUID PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT
+);
+
+Example permission names:
 
 payment:create
 payment:view
 payment:refund
 loan:create
 loan:view
-Agent Permissions
-agent_permissions
------------------
-agent_id
-permission_id
-created_at
-Transactions
-transactions
-------------
-id
-agent_id
-amount
-currency
-transaction_type
-recipient
-risk_score
-risk_level
-decision
-status
-created_at
-Audit Logs
-audit_logs
-----------
-id
-event_id
-agent_id
-action
-resource
-request_data
-decision
-reason
-risk_score
-timestamp
-6. Redis Data Model
-Global kill switch
+fraud:investigate
+18.3 Agent Permissions Table
+CREATE TABLE agent_permissions (
+    agent_id UUID NOT NULL REFERENCES agents(id),
+    permission_id UUID NOT NULL REFERENCES permissions(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (agent_id, permission_id)
+);
+18.4 Transactions Table
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY,
+    agent_id UUID NOT NULL REFERENCES agents(id),
+    action VARCHAR(100) NOT NULL,
+    amount NUMERIC(18, 2),
+    currency CHAR(3) NOT NULL,
+    recipient_id VARCHAR(150),
+    risk_score INTEGER,
+    risk_level VARCHAR(20),
+    decision VARCHAR(30) NOT NULL,
+    execution_status VARCHAR(30) NOT NULL,
+    reason TEXT,
+    idempotency_key VARCHAR(150) UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+18.5 Audit Events Table
+CREATE TABLE audit_events (
+    id UUID PRIMARY KEY,
+    event_type VARCHAR(100) NOT NULL,
+    agent_id UUID,
+    transaction_id UUID,
+    action VARCHAR(100),
+    decision VARCHAR(30),
+    reason TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+Database Considerations
+Add indexes for frequently filtered fields.
+Use database migrations for schema changes.
+Keep audit records separate from mutable agent configuration.
+Restrict audit modification permissions.
+Never store API secrets in transaction metadata.
+Use database transactions for changes that must be atomic.
+
+The audit table is designed for application-level append-only behavior. Stronger tamper evidence can be added later through restricted database roles, external log storage, or cryptographic chaining.
+
+19. Redis Design
+
+Redis supports runtime state that needs fast access or atomic operations.
+
+Emergency Stop
 agentguard:global_stop
 
-Value:
+Possible value:
 
-true / false
-Agent revocation
+STOPPED
+RUNNING
+Agent Revocation
 agentguard:revoked:{agent_id}
-Budget
+Budget Counter
 agentguard:budget:{agent_id}:{date}
+Rate Limiting
+agentguard:rate:{agent_id}:{window}
+Important implementation rules
+PostgreSQL stores persistent configuration and historical records.
+Redis stores fast-changing operational state and counters.
+Security-critical state must not silently fall back to an unsafe default.
+If the emergency state cannot be verified, protected actions must be denied.
+Budget consumption must use atomic operations or database transactions.
 
-Example:
+A Redis counter by itself is not sufficient to implement a complete financial transaction lifecycle. The implementation must define how reservations, successful executions, failures, and retries affect budget usage.
 
-agentguard:budget:agent_001:2026-10-04
-7. Request Processing Pipeline
+20. AI Risk Engine — Technical Design
+20.1 Purpose
 
-This is the core of the entire system.
+The risk engine evaluates contextual information and provides a risk score and explanation to the governance decision engine.
 
-             Agent Request
-                   │
-                   ▼
-          ┌─────────────────┐
-          │ Authentication  │
-          └────────┬────────┘
-                   ▼
-          ┌─────────────────┐
-          │ Global Stop?    │
-          └────────┬────────┘
-                   ▼
-          ┌─────────────────┐
-          │ Agent Revoked?  │
-          └────────┬────────┘
-                   ▼
-          ┌─────────────────┐
-          │ Permission?    │
-          └────────┬────────┘
-                   ▼
-          ┌─────────────────┐
-          │ Budget Check    │
-          └────────┬────────┘
-                   ▼
-          ┌─────────────────┐
-          │ AI Risk Engine  │
-          └────────┬────────┘
-                   ▼
-       ┌───────────┼────────────┐
-       ▼           ▼            ▼
-     ALLOW       APPROVAL      DENY
-       │           │            │
-       ▼           ▼            ▼
- Execute       Human         Block
- Action        Review
-       │
-       ▼
- Audit Log
-8. Authorization API
-Endpoint
-POST /api/v1/authorize
-Request
+It does not independently authorize financial operations.
+
+20.2 Initial MVP Approach
+
+Start with a deterministic, explainable risk-scoring module.
+
+This avoids dependence on paid model APIs and provides predictable behavior during the demo.
+
+Possible features:
+
+Feature	Example
+Amount deviation	Transaction is much larger than the agent's usual amount.
+Transaction frequency	Agent has submitted an unusual number of requests.
+Recipient novelty	Recipient has not been seen before.
+Budget utilization	Transaction consumes a large portion of the remaining budget.
+Failed requests	Agent has recently generated multiple denied requests.
+Transaction timing	Request occurs outside the expected operating period.
+
+These are candidate signals, not automatically reliable fraud indicators. The MVP should use a documented, configurable scoring rule and demonstrate how each signal contributes to the result.
+
+20.3 Risk Scoring Interface
+def evaluate_risk(transaction, agent_context):
+    """
+    Evaluate transaction context.
+
+    Returns:
+        risk_score: integer from 0 to 100
+        risk_level: LOW, MEDIUM, HIGH, or CRITICAL
+        reasons: list of explanation strings
+    """
+
+Illustrative response:
+
 {
-  "agent_id": "agent_001",
-  "action": "payment:create",
-  "amount": 5000,
-  "currency": "INR",
-  "recipient": "merchant_123"
-}
-Response
-{
-  "decision": "ALLOW",
-  "risk_score": 18,
-  "risk_level": "LOW",
-  "reason": "Permission and budget validated"
-}
-9. Denied Request
-{
-  "decision": "DENY",
-  "reason": "Transaction exceeds agent limit",
-  "risk_score": 0
-}
-
-HTTP status can be:
-
-403 Forbidden
-10. High-Risk Request
-{
-  "decision": "HUMAN_APPROVAL",
-  "risk_score": 89,
+  "risk_score": 78,
   "risk_level": "HIGH",
-  "reason": "Unusual transaction pattern"
+  "reasons": [
+    "Recipient is new",
+    "Transaction amount is unusually high",
+    "Agent has submitted frequent requests"
+  ]
 }
-11. Agent APIs
-Register
-POST /api/v1/agents
-Get agents
-GET /api/v1/agents
-Get agent
-GET /api/v1/agents/{agent_id}
-Revoke
-POST /api/v1/agents/{agent_id}/revoke
-Reactivate
-POST /api/v1/agents/{agent_id}/activate
-12. Permission APIs
-GET /api/v1/permissions
-POST /api/v1/agents/{agent_id}/permissions
-DELETE /api/v1/agents/{agent_id}/permissions/{permission}
-13. Budget APIs
-GET /api/v1/agents/{agent_id}/budget
-PUT /api/v1/agents/{agent_id}/budget
+20.4 Decision Engine
 
-Example:
+Conceptually:
 
-{
-  "daily_limit": 50000,
-  "transaction_limit": 10000
-}
-14. Emergency API
-Activate
-POST /api/v1/admin/emergency-stop
-Deactivate
-POST /api/v1/admin/emergency-stop/release
-Status
-GET /api/v1/admin/emergency-stop
-15. Audit API
-GET /api/v1/audit
+def evaluate_request(request, agent):
+    validate_request(request)
 
-Filters:
+    authenticate_agent(agent)
 
-agent_id
-decision
-risk_level
-action
-date
+    if emergency_stop_is_active():
+        return deny("Emergency stop active")
 
-Example:
+    if agent_is_revoked(agent):
+        return deny("Agent revoked")
 
-GET /api/v1/audit?decision=DENY
-16. Security Architecture
-Authentication
+    if not permission_is_granted(agent, request.action):
+        return deny("Permission missing")
 
-Agents should use an API key or signed token.
+    if not budget_is_available(agent, request.amount):
+        return deny("Budget exceeded")
 
-Example:
+    risk = evaluate_risk(request, agent)
 
-Authorization: Bearer <agent-token>
+    if risk.requires_denial:
+        return deny(risk.reason)
 
-For a stronger implementation, use short-lived signed credentials.
+    if risk.requires_approval:
+        return require_human_approval(risk.reason)
 
-Authorization
+    return allow(risk.reason)
 
-Never trust the agent's claimed permissions.
+This is illustrative pseudocode, not production-ready implementation.
 
-The backend retrieves permissions from the trusted policy/database layer.
+The budget check and reservation must be concurrency-safe. Before execution, the system should revalidate any security conditions that could have changed since the original decision.
 
-Agent Request
-      ↓
-Identity
-      ↓
-Server-side Policy
-      ↓
-Decision
-17. Fail-Closed Architecture
+21. Security Requirements
 
-This is extremely important.
+Security is central to AgentGuard because its purpose is to govern potentially sensitive financial actions.
 
-If the governance system cannot safely determine whether an action should be allowed:
+21.1 Agent Authentication
 
-Policy unavailable
-      ↓
-DENY
+Each agent must authenticate using a server-validated credential.
 
-Not:
+Possible MVP approach:
 
-Policy unavailable
-      ↓
-ALLOW
+Issue a unique agent API key.
+Store only a secure hash of the key where feasible.
+Authenticate every protected request.
+Support key rotation or revocation.
+Never expose agent secrets in frontend code or logs.
 
-This prevents a governance outage from becoming a security bypass.
+For production integrations, short-lived signed credentials or stronger workload identity mechanisms may be appropriate.
 
-18. Race Condition Protection
+21.2 Administrator Authentication
 
-Budget enforcement must handle concurrent requests.
+Administrative endpoints require authenticated and authorized operator access.
+
+The emergency stop, agent revocation, budget changes, permission changes, and release operation must not be publicly accessible.
+
+21.3 Server-Side Authorization
+
+The backend must load permissions from trusted server-side storage.
+
+The agent must not be allowed to send its own permissions or risk classification as trusted facts.
+
+21.4 Fail-Closed Behavior
+
+If a mandatory governance check cannot be completed:
+
+Policy check unavailable
+        |
+        v
+Protected action denied
+
+The system must not treat an infrastructure failure as authorization to proceed.
+
+21.5 Transaction Integrity
+
+The transaction that is executed must be the same transaction that was evaluated.
+
+Use a transaction ID, immutable request snapshot, and idempotency key to prevent modification and accidental duplicate execution.
+
+21.6 Audit Security
+
+Audit records must not contain credentials, authentication tokens, or unnecessary sensitive financial information.
+
+The normal application workflow should not allow historical audit records to be edited or deleted.
+
+22. Budget Race Conditions
+
+Budget enforcement must remain correct when multiple requests arrive simultaneously.
 
 Example:
 
@@ -399,286 +589,465 @@ Remaining budget = ₹10,000
 Request A = ₹7,000
 Request B = ₹7,000
 
-Naive implementation:
+A naive implementation might allow both requests to read the same remaining budget and approve ₹14,000 of spending.
 
-A sees ₹10,000 → ALLOW
-B sees ₹10,000 → ALLOW
+That is incorrect.
 
-Result:
+Required behavior
 
-₹14,000 spent
+The system must reserve or consume the available budget atomically.
 
-Incorrect.
+Possible implementations include:
 
-Use an atomic Redis operation or database transaction so that only one request can consume the remaining budget.
+A Redis Lua script that checks and updates the budget counter atomically.
+A PostgreSQL transaction with appropriate row locking.
+Another concurrency-safe reservation mechanism.
 
-19. AI Risk Engine Design
-Input
-Agent identity
-Transaction amount
-Transaction type
-Recipient
-Transaction frequency
-Historical behavior
-Budget usage
-Time
-Processing
-Normalize
-   ↓
-Extract features
-   ↓
-Risk calculation
-   ↓
-Risk score
-   ↓
-Risk category
-Output
-0–39     LOW
-40–74    MEDIUM
-75–100   HIGH
+The design must also handle failed execution and retries so that reservations are released or finalized consistently.
 
-These thresholds should be configurable.
+23. Financial Execution Simulator
 
-20. Decision Engine
+The MVP should use a simulated financial service.
 
-The final decision should consider all controls, not AI alone.
+Responsibilities
+Accept execution requests from the trusted backend.
+Validate the execution request.
+Return a transaction ID.
+Simulate success or failure.
+Record the execution outcome.
+Prevent accidental duplicate execution through idempotency.
+Example
+{
+  "transaction_id": "txn-1001",
+  "amount": 5000,
+  "currency": "INR",
+  "status": "SUCCESS"
+}
 
-Conceptually:
+The simulator should never report a transaction as successful unless its simulated execution actually succeeds.
 
-IF global_stop:
-    DENY
+This approach demonstrates governance behavior without requiring real banking credentials or financial integrations.
 
-IF agent_revoked:
-    DENY
+24. Frontend Technical Requirements
+24.1 Pages
+Dashboard
 
-IF permission_missing:
-    DENY
+Displays:
 
-IF budget_exceeded:
-    DENY
+System status.
+Agent count.
+Allowed and denied actions.
+Risk distribution.
+Recent transactions.
+Agents
 
-risk = evaluate_risk(request)
+Supports:
 
-IF risk >= HIGH_THRESHOLD:
-    HUMAN_APPROVAL / DENY
+Agent listing.
+Agent details.
+Status display.
+Permission configuration.
+Budget configuration.
+Revocation.
+Transactions
 
-ELSE:
-    ALLOW
+Displays:
 
-This prevents an AI model from becoming the sole security authority.
+Transaction ID.
+Agent.
+Action.
+Amount.
+Risk score.
+Decision.
+Execution outcome.
+Decision reason.
+Risk Monitor
 
-21. Observability
+Displays:
 
-Recommended:
+High-risk requests.
+Risk explanations.
+Pending approvals.
+Recent suspicious activity.
+Audit Logs
 
-Prometheus
-Grafana
+Supports:
 
-Metrics:
+Searching.
+Filtering.
+Reviewing decision details.
+Inspecting execution outcomes.
+Emergency Control
 
-authorization_requests_total
-authorization_allowed_total
-authorization_denied_total
-authorization_latency
-risk_evaluations_total
-high_risk_transactions_total
-emergency_stop_events_total
+Displays:
 
-For the hackathon, these can be added after the core MVP works.
+Current emergency state.
+Authorized activation.
+Authorized release.
 
-22. Performance Requirements
+The frontend may hide controls from unauthorized users, but backend authorization remains mandatory.
 
-Target requirements for the prototype:
+25. Deployment Architecture
 
-Metric	Target
-Authorization API	< 200 ms typical
-Redis checks	< 20 ms typical
-Dashboard API	< 500 ms typical
-Audit write	< 100 ms typical
-Emergency state propagation	Near real-time
+A simple cloud deployment is sufficient for the hackathon.
 
-Important: these are engineering targets, not claims. Measure them using your deployed system before putting numbers into the presentation.
+                 USERS
+                   |
+                   v
+          React Frontend
+             (Vercel)
+                   |
+                   | HTTPS
+                   v
+           FastAPI Backend
+             (Cloud Host)
+               /     \
+              /       \
+             v         v
+       PostgreSQL     Redis
+             |
+             v
+     Financial Simulator
+Deployment Requirements
+HTTPS for public application endpoints.
+Environment variables for secrets.
+No secrets committed to GitHub.
+Restricted database access.
+Appropriate authentication for administrative operations.
+Publicly accessible project links required for submission.
+Health-check endpoint for backend availability.
 
-23. Reliability
+The actual provider for PostgreSQL, Redis, and the backend should be selected based on available free-tier options and compatibility. The architecture does not require a paid service or a paid LLM API.
 
-AgentGuard should:
+26. Environment Configuration
 
-fail closed
-persist audit events
-use database transactions where required
-protect budget counters against race conditions
-validate every request
-prevent revoked agents from accessing protected APIs
-maintain emergency state independently of frontend state
-24. Deployment
+Example .env.example:
 
-Recommended hackathon deployment:
+APP_ENV=development
+APP_NAME=AgentGuard
 
-                 Internet
-                    │
-                    ▼
-             ┌─────────────┐
-             │   Vercel    │
-             │ React UI    │
-             └──────┬──────┘
-                    │
-                    ▼
-             ┌─────────────┐
-             │ FastAPI     │
-             │ Backend     │
-             └──────┬──────┘
-                    │
-             ┌──────┴──────┐
-             ▼             ▼
-        PostgreSQL       Redis
+DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/agentguard
 
-Docker can be used locally:
+REDIS_URL=redis://localhost:6379/0
 
-docker-compose
- ├── frontend
- ├── backend
- ├── postgres
- └── redis
-25. Development Phases
-Phase 1 — Core Backend
+FRONTEND_ORIGIN=http://localhost:5173
 
-Build:
+AGENT_API_KEY_SECRET=replace_with_a_secure_secret
 
+This file is only a template.
+
+Use real secrets in the local environment or deployment platform. Do not commit a populated .env file to the repository.
+
+27. Testing Strategy
+27.1 Unit Testing
+
+Test individual components:
+
+Agent authentication.
+Permission evaluation.
+Budget enforcement.
+Risk scoring.
+Revocation.
+Emergency state.
+Decision engine.
+Audit event creation.
+27.2 Integration Testing
+
+Test complete flows:
+
+Agent Request
+     |
+     v
 FastAPI
-PostgreSQL
-Agent registration
-Authentication
-permissions
-Phase 2 — Governance
-
-Build:
-
-authorization
-budget
-Redis
-revocation
-emergency stop
-Phase 3 — AI
-
-Build:
-
-risk scoring
-suspicious transaction detection
-risk explanation
-human approval
-Phase 4 — Dashboard
-
-Build:
-
-agent list
-transaction table
-risk alerts
-budget visualization
-audit logs
-kill switch
-Phase 5 — Integration
-
-Connect:
-
-Agent → AgentGuard → Financial Simulator
-Phase 6 — Testing
-
-Test:
-
-unauthorized request
-authorized request
-budget exceeded
-revoked agent
-emergency stop
-high-risk transaction
-concurrent transactions
-Phase 7 — Deployment
-
-Deploy:
-
-Frontend → Vercel
-Backend → Cloud
-Database → PostgreSQL
-Cache → Redis
-26. Testing Strategy
-Unit Tests
-
-Test:
-
-permission_check()
-budget_check()
-risk_check()
-revocation_check()
-emergency_check()
-Integration Tests
-
-Test:
-
-Agent → API → Governance → Database
-Security Tests
+     |
+     v
+Governance Checks
+     |
+     v
+PostgreSQL / Redis
+     |
+     v
+Financial Simulator
+     |
+     v
+Audit Record
+27.3 Security Testing
 
 Attempt:
 
-unauthorized action
-expired token
-revoked agent
-budget bypass
-invalid agent ID
-malformed request
-Concurrency Test
+Invalid API key.
+Revoked agent request.
+Missing permission.
+Budget bypass.
+Invalid transaction amount.
+Malformed request.
+Unauthorized administrator action.
+Request during emergency stop.
+27.4 Concurrency Testing
 
-Send multiple simultaneous transactions and verify that the budget cannot be exceeded.
+Send simultaneous requests against the same budget and verify that the total reserved or consumed amount never exceeds the configured limit.
 
-27. Final Hackathon Architecture
+27.5 End-to-End Testing
 
-Your final architecture should remain simple:
+The following scenarios must be demonstrable:
 
-                  ┌────────────────────┐
-                  │   AI Agents        │
-                  │                    │
-                  │ Payment            │
-                  │ Loan               │
-                  │ Fraud              │
-                  └─────────┬──────────┘
-                            │
-                            ▼
-              ┌──────────────────────────┐
-              │       AGENTGUARD         │
-              │                          │
-              │  Identity                │
-              │      ↓                   │
-              │  Permission              │
-              │      ↓                   │
-              │  Budget                  │
-              │      ↓                   │
-              │  AI Risk Engine          │
-              │      ↓                   │
-              │  Decision Engine         │
-              │      ↓                   │
-              │  Revocation              │
-              │      ↓                   │
-              │  Audit Logger            │
-              └──────────┬───────────────┘
-                         │
-               ┌─────────┴─────────┐
-               ▼                   ▼
-        Financial Simulator    Operator Dashboard
-                                  │
-                         Emergency Kill Switch
-28. One-Line Technical Pitch
+A normal transaction is allowed.
+An unauthorized transaction is denied.
+An over-budget transaction is denied.
+A high-risk transaction requires approval or is denied.
+A revoked agent cannot submit a protected action.
+The emergency stop blocks new protected actions.
+Audit logs explain the resulting decisions.
+28. Performance Requirements
 
-AgentGuard is a policy-driven governance control plane that intercepts autonomous financial-agent actions and combines identity, least-privilege authorization, dynamic budget enforcement, AI-based risk assessment, real-time revocation, emergency shutdown, and immutable audit logging before any sensitive action reaches a financial system.
+These are proposed engineering targets, not measured results.
 
-🔥 Most important point for your hackathon
+Metric	Initial Target
+Authorization latency	Under 200 ms for typical requests
+Dashboard API response	Under 500 ms for typical queries
+Budget enforcement	Correct under concurrent requests
+Revocation	Effective for subsequent authorization checks
+Emergency stop	Blocks new protected actions once the authoritative state is active and visible to the enforcing service
+Audit coverage	Every request and decision has an audit outcome
 
-Don't try to implement the entire TRD.
+Measure latency in your deployed environment before claiming performance results in the presentation.
 
-Build this exact MVP path first:
+AI model calls, network conditions, and database load can significantly affect response times.
 
-Agent → Authenticate → Permission → Budget → AI Risk → Decision → Transaction Simulator → Audit → Dashboard
+29. Development Roadmap
 
-Then add:
+The implementation should proceed in dependency order.
 
-Revocation → Emergency Stop → Human Approval
+Phase 1 — Foundation
 
-If those pieces work smoothly in a live demo, AgentGuard is technically strong enough for a hackathon submission.
+Build:
+
+FastAPI application.
+PostgreSQL connection.
+Agent registration.
+Agent authentication.
+Basic permission system.
+
+Deliverable: An agent can authenticate and submit a request that is checked against its permissions.
+
+Phase 2 — Governance Engine
+
+Build:
+
+Authorization pipeline.
+Transaction limits.
+Daily budgets.
+Redis integration.
+Revocation.
+
+Deliverable: Unauthorized and over-budget requests are blocked.
+
+Phase 3 — AI Risk Engine
+
+Build:
+
+Transaction feature extraction.
+Configurable risk scoring.
+Risk explanations.
+Allow/deny/approval decision logic.
+
+Deliverable: The same transaction context produces a reproducible, explainable risk assessment.
+
+Phase 4 — Emergency and Audit
+
+Build:
+
+Global emergency stop.
+Administrative authorization.
+Audit event creation.
+Audit search API.
+
+Deliverable: Operators can stop new protected actions and investigate decisions.
+
+Phase 5 — Dashboard
+
+Build:
+
+Agent management UI.
+Transaction monitor.
+Budget visualization.
+Risk alerts.
+Audit log viewer.
+Emergency controls.
+
+Deliverable: A working interface for operating AgentGuard.
+
+Phase 6 — Integration and Testing
+
+Build:
+
+Financial simulator.
+End-to-end transaction flow.
+Concurrency tests.
+Failure handling.
+Security tests.
+
+Deliverable: A reliable end-to-end demonstration.
+
+Phase 7 — Deployment
+
+Build:
+
+Frontend deployment.
+Backend deployment.
+Database and Redis configuration.
+Environment variables.
+Public GitHub repository.
+README and demonstration instructions.
+
+Deliverable: A publicly accessible application with a working demonstration.
+
+30. Final Demo Scenario
+
+The presentation should demonstrate one coherent security story.
+
+Scenario 1 — Normal Transaction
+Payment Agent
+     |
+     v
+Requests ₹5,000
+     |
+     v
+Authentication: PASS
+Permission: PASS
+Budget: PASS
+Risk: LOW
+     |
+     v
+ALLOW
+     |
+     v
+Simulator executes transaction
+     |
+     v
+Audit record created
+Scenario 2 — Budget Violation
+Payment Agent
+     |
+     v
+Requests ₹15,000
+     |
+     v
+Configured transaction limit: ₹10,000
+     |
+     v
+DENY
+     |
+     v
+Reason appears in audit log
+Scenario 3 — Suspicious Transaction
+Agent requests unusual transaction
+     |
+     v
+Risk engine evaluates context
+     |
+     v
+HIGH RISK
+     |
+     v
+HUMAN APPROVAL / DENY
+Scenario 4 — Agent Revocation
+Administrator revokes agent
+     |
+     v
+Agent status: REVOKED
+     |
+     v
+Subsequent protected requests denied
+Scenario 5 — Emergency Stop
+Administrator activates emergency stop
+     |
+     v
+Authoritative system state: STOPPED
+     |
+     v
+All new protected agent actions denied
+Scenario 6 — Audit Verification
+
+Show that the dashboard records:
+
+Who requested the action.
+What operation was requested.
+Which checks passed or failed.
+The final decision.
+The reason for the decision.
+Whether execution succeeded.
+31. Recommended Repository Documentation
+
+Your GitHub repository should contain:
+
+README.md
+PRD.md
+TRD.md
+LICENSE
+.gitignore
+.env.example
+
+backend/
+frontend/
+tests/
+docs/
+
+The README should include:
+
+Project overview.
+Problem statement.
+Features.
+Architecture diagram.
+Technology stack.
+Local installation instructions.
+Environment configuration.
+API documentation.
+Demo workflow.
+Deployment link.
+Screenshots.
+Known limitations.
+
+Only mark features as implemented when they actually work.
+
+32. Final Architecture Decision
+
+For the hackathon, I recommend keeping the implementation to one modular FastAPI backend, one React frontend, PostgreSQL, Redis, and a simulated financial service.
+
+Do not begin with separate microservices for every governance component. Keep the modules separate in code while running them in one backend application.
+
+This approach reduces deployment complexity and makes the security flow easier to test and demonstrate.
+
+The critical request pipeline remains:
+
+Agent → Authentication → Emergency/Revocation Checks → Permissions → Budget → AI Risk → Decision → Execution Simulator → Audit Log → Dashboard
+
+33. Final Project Summary
+Product Summary
+
+AgentGuard is a governance platform for autonomous financial agents that enforces least-privilege access, spending limits, contextual risk assessment, real-time revocation, emergency shutdown, and comprehensive audit logging.
+
+Technical Summary
+
+AgentGuard uses React and TypeScript for the operator dashboard, FastAPI and Python for the governance engine, PostgreSQL for persistent records, Redis for runtime state and atomic budget operations, and a simulated financial service for safe transaction execution.
+
+What Makes the Project Valuable?
+
+Its primary differentiator is the combination of deterministic security enforcement and AI-assisted risk assessment in one centralized governance workflow.
+
+AI evaluates contextual risk, while the governance engine remains responsible for enforcing permissions, budgets, revocation, and emergency controls.
+
+Final Hackathon Priority
+
+Build these features first:
+
+Agent registration and authentication.
+Permissions and authorization.
+Concurrency-safe budget enforcement.
+Explainable risk engine.
+Revocation and emergency stop.
+Audit logging.
+Dashboard.
+Financial simulator and end-to-end demo.
+
+Your next milestone should be a working backend governance pipeline before you spend time polishing the dashboard. Once the pipeline works reliably, the frontend can demonstrate the security decisions clearly, and the project will have a strong technical foundation for judging.

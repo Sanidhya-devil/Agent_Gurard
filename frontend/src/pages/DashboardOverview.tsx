@@ -16,6 +16,8 @@ import {
   Cpu,
   Flame,
   CheckCircle2,
+  RotateCcw,
+  Inbox,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -217,8 +219,43 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </p>
         </div>
 
-        {/* Action Controls: Secondary 'Simulate' dropdown + Single Primary 'Launch Sandbox' (Item 1) */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Action Controls: State Switcher + Simulate dropdown + Launch Sandbox */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Direct State Views Switcher (Item 7: Instant access to Normal / Skeleton / Empty) */}
+          <div className="flex items-center p-0.5 rounded-lg bg-zinc-900 border border-zinc-750 text-xs font-mono shadow-sm">
+            <span className="px-2 text-zinc-400 text-xs font-sans">State:</span>
+            <button
+              onClick={() => setDemoState('normal')}
+              className={`px-2.5 py-1 rounded-md transition text-xs font-medium ${
+                demoState === 'normal'
+                  ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Normal
+            </button>
+            <button
+              onClick={() => setDemoState('loading')}
+              className={`px-2.5 py-1 rounded-md transition text-xs font-medium ${
+                demoState === 'loading'
+                  ? 'bg-indigo-600 text-white shadow-sm border border-indigo-500'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Skeleton
+            </button>
+            <button
+              onClick={() => setDemoState('empty')}
+              className={`px-2.5 py-1 rounded-md transition text-xs font-medium ${
+                demoState === 'empty'
+                  ? 'bg-amber-600 text-white shadow-sm border border-amber-500'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Empty
+            </button>
+          </div>
+
           {/* Merged Secondary Dropdown: Simulate */}
           <div className="relative">
             <button
@@ -276,13 +313,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     </button>
                     <button
                       onClick={() => { setDemoState('loading'); setSimulateMenuOpen(false); }}
-                      className={`px-1.5 py-0.5 rounded text-xs ${demoState === 'loading' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                      className={`px-1.5 py-0.5 rounded text-xs ${demoState === 'loading' ? 'bg-indigo-600 text-white font-semibold' : 'text-zinc-400 hover:bg-zinc-800'}`}
                     >
                       Skeleton
                     </button>
                     <button
                       onClick={() => { setDemoState('empty'); setSimulateMenuOpen(false); }}
-                      className={`px-1.5 py-0.5 rounded text-xs ${demoState === 'empty' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                      className={`px-1.5 py-0.5 rounded text-xs ${demoState === 'empty' ? 'bg-amber-600 text-white font-semibold' : 'text-zinc-400 hover:bg-zinc-800'}`}
                     >
                       Empty
                     </button>
@@ -303,66 +340,101 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       </div>
 
+      {/* Demo State Banner */}
+      {demoState === 'loading' && (
+        <div className="rounded-xl p-3 bg-indigo-950/40 border border-indigo-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-indigo-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
+            <span className="font-semibold text-white">Skeleton Loading View Active:</span>
+            <span>Simulating network latency and skeleton placeholders for all dashboard widgets and telemetry rails.</span>
+          </div>
+          <button
+            onClick={() => setDemoState('normal')}
+            className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition self-start sm:self-auto shrink-0"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Back to Live View</span>
+          </button>
+        </div>
+      )}
+
+      {demoState === 'empty' && (
+        <div className="rounded-xl p-3 bg-amber-950/40 border border-amber-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="font-semibold text-white">Empty State View Active:</span>
+            <span>Simulating a freshly installed AgentGuard instance with zero traffic, zero queued approvals, and reset ledgers.</span>
+          </div>
+          <button
+            onClick={() => setDemoState('normal')}
+            className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium flex items-center gap-1.5 transition self-start sm:self-auto shrink-0"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Back to Live View</span>
+          </button>
+        </div>
+      )}
+
       {/* 2. Top Metric Cards (Item 3, 4, 5: Dynamic subtext, clipped sparklines, WCAG AA contrast) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <StatCard
           title="Active Agents"
-          value={sharedData.kpis.activeAgents}
-          subtitle={sharedData.kpis.activeAgentsSubtitle}
-          delta={sharedData.kpis.activeAgentsDelta} // Dynamic status: "3/3 online · 1 gate degraded" (Item 3)
-          sparklineData={sharedData.sparklines.activeAgents} // Meaningful online series (Item 4)
+          value={demoState === 'empty' ? 0 : sharedData.kpis.activeAgents}
+          subtitle={demoState === 'empty' ? '0/0 agents online' : sharedData.kpis.activeAgentsSubtitle}
+          delta={demoState === 'empty' ? { text: '0 online', isPositive: true } : sharedData.kpis.activeAgentsDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.activeAgents}
           icon={Users}
           variant="blue"
           isLoading={demoState === 'loading'}
         />
         <StatCard
           title="Allowed Actions"
-          value={sharedData.kpis.allowedActions}
-          subtitle={sharedData.kpis.allowedSubtext} // "Cleared all 7 gates"
-          delta={sharedData.kpis.allowedDelta}
-          sparklineData={sharedData.sparklines.allowed}
+          value={demoState === 'empty' ? 0 : sharedData.kpis.allowedActions}
+          subtitle={demoState === 'empty' ? 'Zero actions executed' : sharedData.kpis.allowedSubtext}
+          delta={demoState === 'empty' ? { text: '0 today', isPositive: true } : sharedData.kpis.allowedDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.allowed}
           icon={CheckCircle}
           variant="emerald"
           isLoading={demoState === 'loading'}
         />
         <StatCard
           title="Blocked Actions"
-          value={sharedData.kpis.blockedActions}
-          subtitle={sharedData.kpis.blockedSubtext}
-          delta={sharedData.kpis.blockedDelta}
-          sparklineData={sharedData.sparklines.blocked}
+          value={demoState === 'empty' ? 0 : sharedData.kpis.blockedActions}
+          subtitle={demoState === 'empty' ? 'Zero violations' : sharedData.kpis.blockedSubtext}
+          delta={demoState === 'empty' ? { text: '0 blocked', isPositive: true } : sharedData.kpis.blockedDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.blocked}
           icon={XCircle}
-          variant="indigo" // Blocked is indigo
+          variant="indigo"
           onClick={() => setActiveTab('audit', 'DENY')}
           isLoading={demoState === 'loading'}
         />
         <StatCard
           title="High Risk"
-          value={sharedData.kpis.highRiskActions}
-          subtitle={sharedData.kpis.highRiskSubtext}
-          delta={sharedData.kpis.highRiskDelta}
-          sparklineData={sharedData.sparklines.highRisk}
+          value={demoState === 'empty' ? 0 : sharedData.kpis.highRiskActions}
+          subtitle={demoState === 'empty' ? 'Zero anomalies' : sharedData.kpis.highRiskSubtext}
+          delta={demoState === 'empty' ? { text: '0 flagged', isPositive: true } : sharedData.kpis.highRiskDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.highRisk}
           icon={AlertTriangle}
-          variant="red" // Reserved red for High Risk
+          variant="red"
           onClick={() => setActiveTab('audit', 'ALL', 'Risk')}
           isLoading={demoState === 'loading'}
         />
         <StatCard
           title="Spent Today"
-          value={sharedData.kpis.spentTodayFormatted} // Indian grouping: ₹1,45,804 (Item 4: clipped, never overlaps)
-          subtitle={sharedData.kpis.spentTodaySubtext}
-          delta={sharedData.kpis.spentTodayDelta}
-          sparklineData={sharedData.sparklines.spent}
+          value={demoState === 'empty' ? '₹0' : sharedData.kpis.spentTodayFormatted}
+          subtitle={demoState === 'empty' ? '₹0 allocated' : sharedData.kpis.spentTodaySubtext}
+          delta={demoState === 'empty' ? { text: '0% used', isPositive: true } : sharedData.kpis.spentTodayDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.spent}
           icon={IndianRupee}
           variant="purple"
           isLoading={demoState === 'loading'}
         />
         <StatCard
           title="Pending Reviews"
-          value={sharedData.kpis.pendingReviews}
-          subtitle={sharedData.kpis.pendingReviewsSubtext}
-          delta={sharedData.kpis.pendingReviewsDelta}
-          sparklineData={sharedData.sparklines.pendingReviews}
+          value={demoState === 'empty' ? 0 : sharedData.kpis.pendingReviews}
+          subtitle={demoState === 'empty' ? 'Queue empty' : sharedData.kpis.pendingReviewsSubtext}
+          delta={demoState === 'empty' ? { text: '0 pending', isPositive: true } : sharedData.kpis.pendingReviewsDelta}
+          sparklineData={demoState === 'empty' ? [0, 0, 0, 0] : sharedData.sparklines.pendingReviews}
           icon={Clock}
           variant="amber"
           onClick={() => setActiveTab('approvals')}
@@ -382,12 +454,97 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </span>
           </div>
           <span className="text-xs font-mono text-zinc-400">
-            Total Inflow: {sharedData.pipelineGates[0].inCount} reqs · Final Settled: {sharedData.pipelineGates[6].passedCount}
+            {demoState === 'loading'
+              ? 'Loading pipeline metrics...'
+              : demoState === 'empty'
+              ? 'Total Inflow: 0 reqs · Final Settled: 0'
+              : `Total Inflow: ${sharedData.pipelineGates[0].inCount} reqs · Final Settled: ${sharedData.pipelineGates[6].passedCount}`}
           </span>
         </div>
 
         {/* Chained Funnel Cards with Strict 6-Row Layout (Item 2) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-stretch">
+        {demoState === 'loading' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-stretch animate-pulse">
+            {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+              <div
+                key={num}
+                className="rounded-xl p-3 border border-zinc-800/80 bg-zinc-900/60 flex flex-col justify-between h-44 space-y-2"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="h-3 w-6 bg-zinc-800 rounded" />
+                    <div className="h-3.5 w-3.5 bg-zinc-800 rounded-full" />
+                  </div>
+                  <div className="h-4 w-20 bg-zinc-800 rounded mb-1.5" />
+                  <div className="h-3 w-14 bg-zinc-800 rounded mb-3" />
+                  <div className="border-t border-zinc-800 pt-2 space-y-1.5">
+                    <div className="h-3 w-full bg-zinc-800 rounded" />
+                    <div className="h-2.5 w-16 bg-zinc-800 rounded" />
+                    <div className="h-1.5 w-full bg-zinc-800 rounded-full mt-2" />
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-zinc-800/80">
+                  <div className="h-4 w-full bg-zinc-800 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : demoState === 'empty' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-stretch">
+            {sharedData.pipelineGates.map((gate) => {
+              const Icon = gateIcons[gate.num] || CheckCircle2;
+              return (
+                <div
+                  key={gate.num}
+                  className="rounded-xl p-3 border border-zinc-800/90 bg-zinc-900/40 flex flex-col justify-between h-full min-h-0 min-w-0"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-mono font-bold text-zinc-500 tabular-nums">G{gate.num}</span>
+                      <Icon className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
+                    </div>
+                    <div className="mb-2">
+                      <div className="font-semibold text-xs text-zinc-300 truncate">{gate.title}</div>
+                      <div className="text-xs text-zinc-500 font-mono truncate">{gate.short}</div>
+                    </div>
+                    <div className="border-t border-zinc-800/80 pt-1.5 space-y-1">
+                      <div className="text-xs font-mono tabular-nums whitespace-nowrap text-zinc-400 flex items-center justify-between">
+                        <span><strong>0</strong> in</span>
+                        <span>·</span>
+                        <span>0 blocked</span>
+                      </div>
+                      <div className="text-xs font-mono tabular-nums whitespace-nowrap text-zinc-500">
+                        -- ms avg
+                      </div>
+                      <div className="space-y-1 pt-0.5">
+                        <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                          <span>Passed: 0</span>
+                          <span>(0%)</span>
+                        </div>
+                        <div className="w-full bg-zinc-800 rounded-full h-1 overflow-hidden">
+                          <div className="h-full bg-zinc-700" style={{ width: '0%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-zinc-800/80 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-500 text-xs">Status</span>
+                      <span className="px-1.5 py-0.5 rounded text-xs font-semibold border text-zinc-400 bg-zinc-800/40 border-zinc-700">
+                        IDLE
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-mono text-zinc-500">
+                      <span>Drop</span>
+                      <span>--</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-stretch">
           {sharedData.pipelineGates.map((gate) => {
             const Icon = gateIcons[gate.num] || CheckCircle2;
             const isSelected = activePipelineStage === gate.num;
@@ -490,6 +647,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             );
           })}
         </div>
+        )}
       </div>
 
       {/* 4. Primary Charts Grid (Item 5, 6: Stacked Bar Chart & Donut Verification) */}
@@ -532,8 +690,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           {/* Chart Display / Loading Skeleton / Empty State */}
           <div className="h-64 w-full mt-2 relative">
             {demoState === 'loading' ? (
-              <div className="w-full h-full flex items-center justify-center bg-zinc-900/40 rounded-xl animate-pulse">
-                <span className="text-xs font-mono text-zinc-400">Loading activity buckets...</span>
+              <div className="w-full h-full flex items-end justify-between gap-2 p-4 bg-zinc-900/40 rounded-xl animate-pulse">
+                {[45, 70, 35, 85, 50, 90, 65, 40, 80, 55, 95, 45].map((h, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                    <div className="w-full bg-zinc-800 rounded-t" style={{ height: `${h}%` }} />
+                    <div className="w-5 h-2 bg-zinc-850 rounded" />
+                  </div>
+                ))}
               </div>
             ) : demoState === 'empty' ? (
               <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900/30 rounded-xl border border-dashed border-zinc-800 text-center p-4">
@@ -616,51 +779,72 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
           <p className="text-xs text-zinc-400 mb-2">Evaluated transaction risk severity tiers</p>
 
-          <div className="relative h-48 w-full flex items-center justify-center my-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sharedData.riskTiers}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={56}
-                  outerRadius={78}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {sharedData.riskTiers.map((entry, index) => (
-                    <Cell
-                      key={`risk-cell-${index}`}
-                      fill={entry.color}
-                      stroke="#121215"
-                      strokeWidth={2}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<DonutTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-bold text-zinc-100 font-mono tabular-nums">{sharedData.totalScored}</span>
-              <span className="text-xs uppercase font-mono text-zinc-400">Total Scored</span>
+          {demoState === 'loading' ? (
+            <div className="w-full flex-1 flex flex-col justify-between animate-pulse">
+              <div className="h-48 w-full flex items-center justify-center my-1">
+                <div className="w-36 h-36 rounded-full border-8 border-zinc-800/80 border-t-indigo-500/60 animate-spin" />
+              </div>
+              <div className="space-y-2 pt-2.5 border-t border-zinc-800">
+                <div className="h-3.5 bg-zinc-800 rounded w-full" />
+                <div className="h-3.5 bg-zinc-800 rounded w-5/6" />
+                <div className="h-3.5 bg-zinc-800 rounded w-4/6" />
+              </div>
             </div>
-          </div>
-
-          {/* Color-blind safe direct text labels with counts and percentages (Item 5 & 6) */}
-          <div className="space-y-2 pt-2.5 border-t border-zinc-800 text-xs">
-            {sharedData.riskTiers.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-zinc-200 font-medium">{item.name}</span>
-                </div>
-                <div className="flex items-center gap-2 font-mono tabular-nums">
-                  <span className="text-zinc-100 font-bold">{item.value}</span>
-                  <span className="text-xs text-zinc-400">({item.percentage}%)</span>
+          ) : demoState === 'empty' ? (
+            <div className="w-full flex-1 flex flex-col items-center justify-center py-8 text-center border border-dashed border-zinc-800 rounded-xl my-2">
+              <ShieldAlert className="w-8 h-8 text-zinc-600 mb-2" />
+              <span className="text-xs font-mono text-zinc-300 font-semibold">Zero Risk Evaluations</span>
+              <span className="text-xs text-zinc-500 mt-0.5">No anomalies evaluated yet</span>
+            </div>
+          ) : (
+            <>
+              <div className="relative h-48 w-full flex items-center justify-center my-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={sharedData.riskTiers}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={56}
+                      outerRadius={78}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {sharedData.riskTiers.map((entry, index) => (
+                        <Cell
+                          key={`risk-cell-${index}`}
+                          fill={entry.color}
+                          stroke="#121215"
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<DonutTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-bold text-zinc-100 font-mono tabular-nums">{sharedData.totalScored}</span>
+                  <span className="text-xs uppercase font-mono text-zinc-400">Total Scored</span>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Color-blind safe direct text labels with counts and percentages (Item 5 & 6) */}
+              <div className="space-y-2 pt-2.5 border-t border-zinc-800 text-xs">
+                {sharedData.riskTiers.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+                      <span className="text-zinc-200 font-medium">{item.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono tabular-nums">
+                      <span className="text-zinc-100 font-bold">{item.value}</span>
+                      <span className="text-xs text-zinc-400">({item.percentage}%)</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="sr-only">
             Donut chart summary: 104 total evaluated transactions. 68 low risk (65%), 22 medium risk (21%), and 14 high risk (14%).
@@ -681,37 +865,52 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <p className="text-xs text-zinc-400 mb-2">Gate approvals vs fail-closed denials</p>
 
           <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sharedData.policyOutcomes} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="2 2" stroke="#1F1F23" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  stroke="#A1A1AA"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={{ stroke: '#27272A' }}
-                />
-                <YAxis
-                  stroke="#A1A1AA"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={{ stroke: '#27272A' }}
-                  allowDecimals={false}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {sharedData.policyOutcomes.map((entry, index) => (
-                    <Cell key={`policy-cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {demoState === 'loading' ? (
+              <div className="h-full w-full flex items-end justify-around p-3 bg-zinc-900/30 rounded-xl animate-pulse">
+                <div className="w-16 h-36 bg-zinc-800 rounded-t" />
+                <div className="w-16 h-20 bg-zinc-800 rounded-t" />
+                <div className="w-16 h-12 bg-zinc-800 rounded-t" />
+              </div>
+            ) : demoState === 'empty' ? (
+              <div className="h-full w-full flex flex-col items-center justify-center p-3 text-center border border-dashed border-zinc-800 rounded-xl">
+                <span className="text-xs font-mono text-zinc-400 font-semibold">Zero Policy Outcomes</span>
+                <span className="text-xs text-zinc-500 mt-0.5">Awaiting agent operations</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sharedData.policyOutcomes} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="2 2" stroke="#1F1F23" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#A1A1AA"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={{ stroke: '#27272A' }}
+                  />
+                  <YAxis
+                    stroke="#A1A1AA"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={{ stroke: '#27272A' }}
+                    allowDecimals={false}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {sharedData.policyOutcomes.map((entry, index) => (
+                      <Cell key={`policy-cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-zinc-800 text-center font-mono">
             {sharedData.policyOutcomes.map((d, i) => (
               <div key={i} className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800">
                 <span className="text-xs text-zinc-400 block">{d.name}</span>
-                <span className="text-xs font-bold text-zinc-100 tabular-nums">{d.value}</span>
+                <span className="text-xs font-bold text-zinc-100 tabular-nums">
+                  {demoState === 'loading' ? '--' : demoState === 'empty' ? 0 : d.value}
+                </span>
               </div>
             ))}
           </div>
@@ -734,67 +933,92 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           <div className="space-y-3">
-            {agents.map((agent) => {
-              const pct =
-                agent.daily_limit > 0
-                  ? Math.min(100, (agent.spent_today / agent.daily_limit) * 100)
-                  : 0;
-              const isHigh = pct >= 80;
-              const isMed = pct >= 50 && pct < 80;
-
-              return (
-                <div
-                  key={agent.id}
-                  className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition"
-                >
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-zinc-200">{agent.name}</span>
-                      <span className="text-xs font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">
-                        {agent.id}
-                      </span>
-                      <span
-                        className={`text-xs font-mono px-1.5 py-0.5 rounded font-semibold ${
-                          agent.status === 'ACTIVE'
-                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                            : 'bg-rose-950 text-rose-400 border border-rose-800'
-                        }`}
-                      >
-                        {agent.status}
-                      </span>
-                    </div>
-                    <span className="font-mono text-zinc-200 text-xs tabular-nums">
-                      {formatINR(agent.spent_today)}{' '}
-                      <span className="text-zinc-400">/ {formatINR(agent.daily_limit)}</span>
-                    </span>
+            {demoState === 'loading' ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5 animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-32 bg-zinc-800 rounded" />
+                    <div className="h-4 w-24 bg-zinc-800 rounded" />
                   </div>
-
-                  <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isHigh ? 'bg-rose-500' : isMed ? 'bg-amber-500' : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${Math.max(2, pct)}%` }}
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs text-zinc-400 mt-1.5 font-mono">
-                    <span>
-                      <strong className={isHigh ? 'text-rose-400' : 'text-zinc-200'}>
-                        {pct.toFixed(0)}%
-                      </strong>{' '}
-                      used
-                    </span>
-                    <span>
-                      Remaining:{' '}
-                      <strong className="text-emerald-400 font-medium tabular-nums">
-                        {formatINR(agent.remaining_today)}
-                      </strong>
-                    </span>
+                  <div className="h-1.5 w-full bg-zinc-800 rounded-full" />
+                  <div className="flex justify-between items-center">
+                    <div className="h-3 w-16 bg-zinc-800 rounded" />
+                    <div className="h-3 w-28 bg-zinc-800 rounded" />
                   </div>
                 </div>
-              );
-            })}
+              ))
+            ) : demoState === 'empty' ? (
+              <div className="p-8 text-center border border-dashed border-zinc-800 rounded-xl">
+                <span className="text-xs font-mono text-zinc-300 font-semibold block mb-1">
+                  All Daily Budget Quotas Available
+                </span>
+                <span className="text-xs text-zinc-500">
+                  Zero agent spend incurred today (₹0 / ₹1,20,000 total limits)
+                </span>
+              </div>
+            ) : (
+              agents.map((agent) => {
+                const pct =
+                  agent.daily_limit > 0
+                    ? Math.min(100, (agent.spent_today / agent.daily_limit) * 100)
+                    : 0;
+                const isHigh = pct >= 80;
+                const isMed = pct >= 50 && pct < 80;
+
+                return (
+                  <div
+                    key={agent.id}
+                    className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition"
+                  >
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-zinc-200">{agent.name}</span>
+                        <span className="text-xs font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">
+                          {agent.id}
+                        </span>
+                        <span
+                          className={`text-xs font-mono px-1.5 py-0.5 rounded font-semibold ${
+                            agent.status === 'ACTIVE'
+                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                              : 'bg-rose-950 text-rose-400 border border-rose-800'
+                          }`}
+                        >
+                          {agent.status}
+                        </span>
+                      </div>
+                      <span className="font-mono text-zinc-200 text-xs tabular-nums">
+                        {formatINR(agent.spent_today)}{' '}
+                        <span className="text-zinc-400">/ {formatINR(agent.daily_limit)}</span>
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isHigh ? 'bg-rose-500' : isMed ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.max(2, pct)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs text-zinc-400 mt-1.5 font-mono">
+                      <span>
+                        <strong className={isHigh ? 'text-rose-400' : 'text-zinc-200'}>
+                          {pct.toFixed(0)}%
+                        </strong>{' '}
+                        used
+                      </span>
+                      <span>
+                        Remaining:{' '}
+                        <strong className="text-emerald-400 font-medium tabular-nums">
+                          {formatINR(agent.remaining_today)}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
@@ -848,49 +1072,84 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-850">
-              {filteredTxs.slice(0, 6).map((tx) => (
-                <tr key={tx.id} className="hover:bg-zinc-850/40 transition">
-                  <td className="py-2.5 px-3 font-mono font-medium text-zinc-200">{tx.agent_id}</td>
-                  <td className="py-2.5 px-3">
-                    <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 font-mono text-xs">
-                      {tx.action}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 font-mono font-semibold text-zinc-100 tabular-nums">
-                    {formatINR(tx.amount)}
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <RiskBadge score={tx.risk_score} level={tx.risk_level} />
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <span
-                      className={`font-mono text-xs font-bold ${
-                        tx.decision === 'ALLOW'
-                          ? 'text-emerald-400'
-                          : tx.decision === 'DENY'
-                          ? 'text-indigo-300' // Lightened Indigo for Blocked (WCAG AA > 4.5:1)
-                          : 'text-amber-400'
-                      }`}
-                    >
-                      {tx.decision}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <span
-                      className={`text-xs font-mono px-2 py-0.5 rounded ${
-                        tx.status === 'EXECUTED'
-                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                          : tx.status === 'BLOCKED'
-                          ? 'bg-indigo-950/70 text-indigo-300 border border-indigo-800'
-                          : 'bg-amber-950 text-amber-400 border border-amber-800'
-                      }`}
-                    >
-                      {tx.status}
+              {demoState === 'loading' ? (
+                [1, 2, 3, 4, 5, 6].map((i) => (
+                  <tr key={`skel-tx-${i}`} className="animate-pulse">
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-28 bg-zinc-800 rounded" />
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-24 bg-zinc-800 rounded" />
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-16 bg-zinc-800 rounded" />
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-20 bg-zinc-800 rounded" />
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-16 bg-zinc-800 rounded" />
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="h-4 w-20 bg-zinc-800 rounded" />
+                    </td>
+                  </tr>
+                ))
+              ) : demoState === 'empty' ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-zinc-400 font-mono">
+                    <Inbox className="w-7 h-7 mx-auto mb-2 text-zinc-600" />
+                    <span className="block font-semibold text-zinc-300">No transactions recorded</span>
+                    <span className="text-xs text-zinc-500 mt-1 block">
+                      Autonomous agent financial requests will appear here in real time.
                     </span>
                   </td>
                 </tr>
-              ))}
-              {filteredTxs.length === 0 && (
+              ) : (
+                filteredTxs.slice(0, 6).map((tx) => (
+                  <tr key={tx.id} className="hover:bg-zinc-850/40 transition">
+                    <td className="py-2.5 px-3 font-mono font-medium text-zinc-200">{tx.agent_id}</td>
+                    <td className="py-2.5 px-3">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 font-mono text-xs">
+                        {tx.action}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 font-mono font-semibold text-zinc-100 tabular-nums">
+                      {formatINR(tx.amount)}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <RiskBadge score={tx.risk_score} level={tx.risk_level} />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={`font-mono text-xs font-bold ${
+                          tx.decision === 'ALLOW'
+                            ? 'text-emerald-400'
+                            : tx.decision === 'DENY'
+                            ? 'text-indigo-300' // Lightened Indigo for Blocked (WCAG AA > 4.5:1)
+                            : 'text-amber-400'
+                        }`}
+                      >
+                        {tx.decision}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={`text-xs font-mono px-2 py-0.5 rounded ${
+                          tx.status === 'EXECUTED'
+                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                            : tx.status === 'BLOCKED'
+                            ? 'bg-indigo-950/70 text-indigo-300 border border-indigo-800'
+                            : 'bg-amber-950 text-amber-400 border border-amber-800'
+                        }`}
+                      >
+                        {tx.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {demoState === 'normal' && filteredTxs.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-zinc-400 font-mono">
                     No transactions recorded matching the selected filter.
